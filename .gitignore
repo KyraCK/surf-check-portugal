@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.claude/
+.DS_Store
+# Rohdaten werden bei jedem Lauf neu geholt
+data/
+# Die fertige Seite baut GitHub bei jedem Lauf selbst (docs/ nicht hochladen)
+docs/
+# Gestaltungs-Entwürfe, nur lokal
+entwurf/
+# Arbeitsnotizen für die Zusammenarbeit mit Claude (enthalten Namen), nur lokal
+PROJEKT.md
+CLAUDE.md

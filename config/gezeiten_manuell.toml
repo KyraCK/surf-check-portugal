@@ -1,0 +1,19 @@
+# =====================================================================
+#  GEZEITEN: EIGENE EINTRÄGE · Surf-Check Portugal
+# =====================================================================
+#  Wenn du Hoch- und Niedrigwasser selbst kennst (zum Beispiel aus einer
+#  Gezeitentabelle oder vom Hafen), trägst du sie hier ein. Für diese
+#  Tage ersetzt das die Modellrechnung, und die Tide wirkt stärker auf
+#  den Score (siehe [tide] in scoring.toml).
+#
+#  Uhrzeiten sind portugiesische Ortszeit. Pro Tag ein Block:
+#
+#  [[gezeiten]]
+#  datum         = 2026-10-08
+#  hochwasser    = ["02:11", "14:24"]
+#  niedrigwasser = ["08:12", "20:35"]
+#
+#  Vor einem Block immer die Zeile [[gezeiten]]. Zum Aktivieren die
+#  Zeichen "#" vor den Zeilen löschen. Es gibt noch keine Einträge,
+#  die Seite rechnet deshalb mit der Modellkurve.
+# =====================================================================

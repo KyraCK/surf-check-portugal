@@ -1,0 +1,39 @@
+# =====================================================================
+#  DATENQUELLEN · Surf-Check Portugal
+# =====================================================================
+#  Hier steht, welche Wettermodelle verwendet werden und wie alt Daten
+#  höchstens sein dürfen. Normalerweise musst du hier nichts ändern.
+# =====================================================================
+
+[daten]
+# Daten, die älter sind als so viele Stunden, zeigt die Seite nicht mehr
+# als aktuell. Sie werden ausgeblendet und der Ausfall wird angezeigt.
+# Die Läufe sind morgens und abends, 12 Stunden sind also der Normalfall.
+max_alter_stunden = 14
+
+# Eine Modell-Kombination bildet ein Modell für Wellen und das passende
+# für Wetter und Wind. Pro Kombination wird ein eigener Score gerechnet.
+# Je weiter die Scores der Kombinationen auseinanderliegen, desto
+# niedriger die Sicherheit. Die Namen "lauf_..." sind die Bezeichnungen,
+# unter denen Open-Meteo den Zeitpunkt des Modelllaufs veröffentlicht.
+
+[[modelle]]
+name        = "GFS"
+welle       = "ncep_gfswave025"
+wetter      = "gfs_seamless"
+lauf_welle  = "ncep_gfswave025"
+lauf_wetter = "ncep_gfs013"
+
+[[modelle]]
+name        = "ECMWF"
+welle       = "ecmwf_wam025"
+wetter      = "ecmwf_ifs025"
+lauf_welle  = "ecmwf_wam025"
+lauf_wetter = "ecmwf_ifs025"
+
+[[modelle]]
+name        = "ICON"
+welle       = "meteofrance_wave"
+wetter      = "icon_seamless"
+lauf_welle  = "meteofrance_wave"
+lauf_wetter = "dwd_icon"

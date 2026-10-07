@@ -1,0 +1,271 @@
+# =====================================================================
+#  SCORE-REGELN · Surf-Check Portugal
+# =====================================================================
+#
+#  Diese Datei legt fest, wie aus den Wetterdaten ein Score von 1 bis 10
+#  wird, für jede Person einzeln. Du kannst alle Zahlen ändern.
+#
+#  SO LIEST DU DIESE DATEI
+#  -----------------------
+#  * Alles hinter einem # ist nur Erklärung und wird ignoriert.
+#  * Die Zahlen links vom Gleichheitszeichen sind die Namen der Regel,
+#    die Zahlen rechts sind die Werte. Die Namen bitte nicht ändern.
+#  * Eine KENNLINIE ist eine Liste von Wertepaaren in eckigen Klammern:
+#        [[0.6, 0], [1.4, 10]]
+#    heißt: "Bei 0,6 gibt es 0, bei 1,4 gibt es 10." Dazwischen wird
+#    eine gerade Linie gezogen (bei 1,0 also 5). Vor dem ersten und
+#    nach dem letzten Paar bleibt der Wert gleich.
+#    Kommazahlen schreibst du mit PUNKT: 1.4, nicht 1,4.
+#  * Nach einer Änderung kannst du im Ordner "surf-check-portugal" im
+#    Terminal   python3 probe.py   eingeben. Das zeigt dir sofort, was
+#    deine Änderung bei einigen Beispiel-Tagen bewirkt.
+#
+#  SO WIRD GERECHNET (für jede Stunde, jeden Spot, jede Person)
+#  ------------------------------------------------------------
+#    Punkte = Wellenhöhe-Punkte (0 bis 10)
+#             x Anteil für Periode      (0 bis 100 %)
+#             x Anteil für Swell-Richtung
+#             x Anteil für Wind
+#             x Anteil für Tide
+#             x Anteil für "Welle zu groß für den Spot"
+#    Das Ergebnis wird auf eine ganze Zahl gerundet und liegt immer
+#    zwischen 1 und 10.
+#    Die Wellenhöhe gibt also die Grundpunkte vor. Alles andere kann
+#    davon nur etwas abziehen. Eine 10 gibt es nur, wenn alles passt.
+#
+#  Alle Startwerte hier sind von Claude aus deinen Angaben abgeleitet
+#  und müssen von dir geprüft werden. Wo etwas geraten ist, steht es
+#  dabei.
+# =====================================================================
+
+
+# ---------------------------------------------------------------------
+#  1. Was die Scores bedeuten
+# ---------------------------------------------------------------------
+[skala]
+lohnt_kaum_bis = 3        # 1 bis 3: lohnt kaum
+surfbar_bis    = 6        # 4 bis 6: surfbar
+gut_bis        = 9        # 7 bis 9: gut. Die 10 ist der Pflichttermin.
+
+# Ab diesem Score (für mindestens eine Person im besten Zeitfenster)
+# gilt der Tag als Surftag. Davon hängt unter anderem ab, ob die Seite
+# Ausflüge nur als kurzen Nachmittagstipp zeigt.
+surftag_ab_punkte = 5
+
+
+# ---------------------------------------------------------------------
+#  2. Regeln für alle gleich
+# ---------------------------------------------------------------------
+[allgemein]
+
+# Böen zählen nur zum Teil zum Wind. 0 = Böen ignorieren, 1 = nur Böen.
+# Beispiel: Wind 10 kn, Böen 20 kn, Anteil 0.3 ergibt 13 kn Wind.
+boeen_anteil = 0.3
+
+# Ablandiger Wind kommt aus einem Bereich, den du pro Spot festlegst
+# (wind_dir_deg in spots.toml). Bis zu so vielen Grad neben diesem
+# Bereich gilt der Wind als "seitlich" (schräg), weiter weg als
+# "auflandig" (vom Meer her, das zerstört die Welle).
+seitlich_bis_grad = 45
+
+# Sehr lange Perioden machen bei kleinen Beachbreaks eher Close-outs
+# (die Welle bricht auf einmal). Kennlinie: Periode in Sekunden, dann
+# Prozent der Punkte, die bleiben.
+zu_lange_periode_prozent = [[14, 100], [18, 85], [22, 70]]
+
+
+# ---------------------------------------------------------------------
+#  3. Passt die Swell-Richtung zum Spot?
+# ---------------------------------------------------------------------
+# Jeder Spot hat einen Bereich, aus dem der Swell kommen soll
+# (swell_dir_deg in spots.toml). Kommt der Swell von woanders, kommt
+# am Strand weniger an. Links: wie viele Grad der Swell außerhalb dieses
+# Bereichs liegt. Rechts: Prozent der Punkte, die bleiben.
+[swell_richtung]
+abstand_grad_prozent = [[0, 100], [20, 85], [45, 55], [75, 25], [110, 0]]
+
+
+# ---------------------------------------------------------------------
+#  4. Welle größer als das, was der Spot verträgt
+# ---------------------------------------------------------------------
+# Gilt nur, wenn ein Spot ein groesse_max_m hat. Links: wie viele Meter
+# die Welle darüber liegt. Rechts: Prozent der Punkte, die bleiben.
+[spot_groesse]
+ueber_max_m_prozent = [[0.0, 100], [0.5, 70], [1.0, 35], [1.5, 10]]
+
+
+# ---------------------------------------------------------------------
+#  5. Gezeiten
+# ---------------------------------------------------------------------
+# Die Tide wird als Zahl von 0 bis 1 gerechnet: 0 = tiefstes Niedrig-
+# wasser des Tages, 1 = höchstes Hochwasser des Tages.
+# Jeder Spot hat ein Wort für die Tide, die er mag (tide in spots.toml).
+# Hier steht, welchen Bereich dieses Wort bedeutet.
+[tide]
+# Wie stark die Tide den Score höchstens drücken darf, wenn der Spot
+# die falsche Tide hat. Das MODELL ist ungenau, deshalb nur wenig.
+# Wenn du Hoch- und Niedrigwasser selbst einträgst, darf es mehr sein.
+abzug_modell_prozent  = 15
+abzug_manuell_prozent = 35
+
+# So viel (auf der Skala 0 bis 1) darf die Tide außerhalb des
+# gewünschten Bereichs liegen, bis der volle Abzug erreicht ist.
+voller_abzug_ab_abstand = 0.35
+
+[tide.bereiche]
+niedrig        = [0.00, 0.35]
+niedrig_mittel = [0.00, 0.65]
+mittel         = [0.30, 0.70]
+mittel_hoch    = [0.35, 1.00]
+hoch           = [0.65, 1.00]
+alle           = [0.00, 1.00]
+
+
+# ---------------------------------------------------------------------
+#  6. Wie sicher ist die Aussage?
+# ---------------------------------------------------------------------
+# Die Seite rechnet den Score einmal pro Modell-Kombination (GFS,
+# ECMWF, ICON mit Météo-France) und schaut, wie weit die Ergebnisse
+# auseinanderliegen. Spanne = höchster minus niedrigster Score.
+[sicherheit]
+hoch_bis_spanne   = 1     # Spanne 0 bis 1 Punkt: Sicherheit hoch
+mittel_bis_spanne = 3     # Spanne 2 bis 3 Punkte: mittel. Mehr: niedrig.
+
+
+# ---------------------------------------------------------------------
+#  7. Zeitfenster
+# ---------------------------------------------------------------------
+# Die Seite bewertet jede Stunde und fasst sie zu Zeitfenstern zusammen.
+# Es zählen nur Stunden bei Tageslicht (zwischen Sonnenaufgang und
+# Sonnenuntergang). Das Fenster beginnt mit der ersten vollen Stunde,
+# die ganz im Hellen liegt.
+[zeitfenster]
+laenge_stunden = 2
+
+
+# ---------------------------------------------------------------------
+#  8. Wörter für das Urteil in der Tabelle
+# ---------------------------------------------------------------------
+# Das Urteil richtet sich nach dem, was den Score am meisten drückt.
+# Du kannst die Wörter nach Belieben umbenennen.
+[urteile]
+zu_klein          = "zu klein"
+zu_gross          = "zu groß"
+kurze_periode     = "kurze Periode"
+windig            = "windig"
+swell_passt_nicht = "Swell passt nicht"
+tide_passt_nicht  = "Tide passt nicht"
+sauber            = "sauber"
+gut               = "gut"
+surfbar           = "surfbar"
+
+
+# ---------------------------------------------------------------------
+#  9. Baden (nur für Basen mit Bade-Ziel, siehe "baden" in spots.toml)
+# ---------------------------------------------------------------------
+# Jede Kennlinie sagt: Bei diesem Wert passt es zu so viel Prozent zum
+# Baden. Die vier Prozentwerte werden miteinander multipliziert. Gerechnet
+# wird mit dem besten Drei-Stunden-Abschnitt zwischen von_uhr und bis_uhr.
+[baden]
+von_uhr = 11
+bis_uhr = 19
+mindest_prozent = 35                              # darunter ist es kein Badetag
+temperatur_c  = [[16, 0], [20, 60], [24, 100]]    # Lufttemperatur
+wind_kn       = [[6, 100], [10, 60], [15, 20], [20, 0]]
+regen_prozent = [[10, 100], [30, 60], [60, 0]]    # Regenwahrscheinlichkeit
+tide          = [[0.4, 40], [0.8, 100]]           # 0 = Niedrigwasser, 1 = Hochwasser
+
+
+# ---------------------------------------------------------------------
+#  10. Ausweich-Spots
+# ---------------------------------------------------------------------
+# Ausweich-Spots (in spots.toml mit ausweich = true) liegen weiter weg.
+# Sie werden im Fazit und als "bester Spot" nur genannt, wenn ihr bester
+# Score mindestens so viele Punkte höher ist als der beste Score der
+# normalen Spots der Basis. In der Detail-Liste sind sie immer zu sehen.
+[ausweich]
+vorsprung_punkte = 2
+
+
+# =====================================================================
+#  PERSONEN
+# =====================================================================
+#  Die Personen haben hier keine Namen, sondern heißen nach der Farbe ihres
+#  Avatars: p1 = Flieder, p2 = Aqua, p3 = Kobalt. Das "label" dient nur dir
+#  zur Orientierung und erscheint nirgends auf der Seite. Die Seite ist
+#  öffentlich, deshalb gehören hier und in den Kommentaren keine Namen hin.
+#
+#  Pro Person gibt es diese Regeln:
+#    hoehe          Wellenhöhe in Metern, brechende Welle am Spot
+#                   (nach dem Korrekturfaktor des Spots) -> Grundpunkte
+#                   von 0 bis 10
+#    periode        Periode in Sekunden -> Prozent der Punkte
+#    wind_ablandig  Windstärke in Knoten bei ablandigem Wind  -> Prozent
+#    wind_seitlich  Windstärke in Knoten bei seitlichem Wind  -> Prozent
+#    wind_auflandig Windstärke in Knoten bei auflandigem Wind -> Prozent
+# =====================================================================
+
+[personen.p1]
+label        = "Flieder-Avatar"
+brett        = "7'2\""
+# "kurz" und "beschreibung" stehen oben auf der Seite in der Legende "Wer ist wer?".
+# Bitte nur Brett und Vorlieben nennen, nichts Persönliches (die Seite ist öffentlich).
+kurz         = "Brett 7'2\""
+beschreibung = "Fährt ein Brett mit 7'2\" und braucht saubere Wellen. Mag wenig Wind und längere Perioden ab 9 Sekunden."
+farbe_dunkel = "#C09CEB"   # Flieder, im Dark Mode
+farbe_hell   = "#8F5FD0"   # Flieder, im Light Mode
+
+# Braucht saubere Wellen ab etwa 1 m. Unter 1 m ist es zu klein:
+# bei 0,6 m gibt es 0 Punkte, bei 1,0 m gerade 5 (surfbar), ab 1,4 m
+# die vollen 10 Grundpunkte, und ab 2,2 m geht es wieder runter.
+hoehe = [[0.6, 0], [1.4, 10], [2.2, 10], [3.2, 0]]
+
+# Mag längere Perioden ab 9 s. Darunter ist es kurze Windwelle.
+periode = [[6, 35], [8, 70], [9, 88], [12, 100]]
+
+# Mag wenig Wind. Bis 6 kn macht die Richtung kaum etwas aus.
+wind_ablandig  = [[6, 100], [12, 85], [18, 60], [25, 30], [32, 0]]
+wind_seitlich  = [[4, 100], [8, 75], [12, 45], [18, 15], [22, 0]]
+wind_auflandig = [[3, 100], [6, 70], [10, 35], [15, 10], [18, 0]]
+
+
+[personen.p2]
+label        = "Aqua-Avatar"
+brett        = "kleines Board"
+kurz         = "kleineres Brett"
+beschreibung = "Fährt ein kleineres Brett und braucht deshalb Druck: Die Welle muss groß genug sein, die Periode ab 9 Sekunden und der Wind ablandig oder schwach. Am besten sind große Wellen, ab Kopfhöhe (Overhead)."
+farbe_dunkel = "#5CC8D4"   # Aqua
+farbe_hell   = "#1A93A6"
+
+# Kleine Boards brauchen Druck: gute Werte ab etwa 1,2 m bei Periode
+# ab 9 s und ablandigem oder schwachem Wind. Optimal wird es erst bei
+# großen Wellen: Überkopf (Welle über Kopfhöhe, etwa 1,8 m) ist immer
+# gut. Deshalb gibt es die vollen Grundpunkte erst ab 1,8 m und bis 3,0 m.
+hoehe = [[0.7, 0], [1.2, 8.5], [1.8, 10], [3.0, 10], [4.4, 0]]
+
+# Ohne Periode kein Druck, deshalb fällt kurze Periode stärker ab.
+periode = [[6, 25], [8, 55], [9, 82], [12, 100]]
+
+# Ablandiger oder schwacher Wind ist gut, auflandiger Wind schlecht.
+wind_ablandig  = [[8, 100], [15, 90], [22, 65], [30, 30], [38, 0]]
+wind_seitlich  = [[6, 100], [10, 80], [15, 50], [20, 20], [26, 0]]
+wind_auflandig = [[4, 100], [8, 65], [12, 35], [18, 10], [22, 0]]
+
+
+[personen.p3]
+label        = "Kobalt-Avatar"
+brett        = "längeres Brett"
+kurz         = "längeres Brett"
+beschreibung = "Fährt ein längeres Brett und kommt deshalb etwas früher in kleinere Wellen. Braucht aber ebenfalls Periode ab 9 Sekunden und ablandigen oder schwachen Wind. Am besten sind große Wellen, ab Kopfhöhe (Overhead)."
+farbe_dunkel = "#5B7FE8"   # Kobalt
+farbe_hell   = "#3252C0"
+
+# Fast dieselben Regeln wie bei p2. Der Unterschied: Mit dem längeren
+# Brett kommt p3 schon bei kleineren Wellen in die Welle (0,6 statt 0,7 m und
+# 8,5 Punkte schon bei 1,1 statt 1,2 m). Optimal sind auch für ihn große
+# Wellen ab etwa 1,8 m. Von Claude geschätzt.
+hoehe = [[0.6, 0], [1.1, 8.5], [1.8, 10], [3.2, 10], [4.6, 0]]
+periode = [[6, 25], [8, 55], [9, 82], [12, 100]]
+wind_ablandig  = [[8, 100], [15, 90], [22, 65], [30, 30], [38, 0]]
+wind_seitlich  = [[6, 100], [10, 80], [15, 50], [20, 20], [26, 0]]
+wind_auflandig = [[4, 100], [8, 65], [12, 35], [18, 10], [22, 0]]

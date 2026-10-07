@@ -1,0 +1,71 @@
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs><clipPath id="av-clip"><rect width="64" height="64" rx="15"/></clipPath></defs>
+
+  <symbol id="av-p1" viewBox="0 0 64 64">
+    <g clip-path="url(#av-clip)">
+      <rect width="64" height="64" fill="var(--accent)" opacity=".24"/>
+      <path d="M32 7.5 C20 7.5 13 16 14 27 C15 34 10.5 38 12 44 C13.5 50 10.5 54 12.5 61 L51.5 61 C54 54 51 49 52 43 C53 37 49 34 50 27 C51 16 44 7.5 32 7.5 Z" fill="var(--hair)"/>
+      <path d="M5 66 C5 53.5 17 47.5 32 47.5 C47 47.5 59 53.5 59 66 Z" fill="var(--accent)"/>
+      <path d="M27 37 H37 V46.5 C35 49.5 29 49.5 27 46.5 Z" fill="var(--skin)"/>
+      <path d="M27 42.5 C30 45.5 34 45.5 37 42.5 V37 H27 Z" fill="#000" opacity=".14"/>
+      <ellipse cx="32" cy="27.5" rx="11.5" ry="13.5" fill="var(--skin)"/>
+      <path d="M32 9.8 C24 9.8 18.8 16 20 29.5 C20.8 23.5 25 18.2 32 16.2 Z" fill="var(--hair)"/>
+      <path d="M32 9.8 C40 9.8 45.2 16 44 29.5 C43.2 23.5 39 18.2 32 16.2 Z" fill="var(--hair)"/>
+      <path d="M15.5 33 C14 38 18 41 16.2 47 C14.8 52 18.5 55 17 60 C19 61 22 61 23.2 59.5 C21.4 55 24 50.5 22.6 45.5 C21.3 41 23 37 21.6 33 Z" fill="var(--hair)"/>
+      <path d="M48.5 33 C50 38 46 41 47.8 47 C49.2 52 45.5 55 47 60 C45 61 42 61 40.8 59.5 C42.6 55 40 50.5 41.4 45.5 C42.7 41 41 37 42.4 33 Z" fill="var(--hair)"/>
+      <circle cx="27.8" cy="28.2" r="1.5" fill="var(--hair)"/>
+      <circle cx="36.2" cy="28.2" r="1.5" fill="var(--hair)"/>
+      <path d="M24.8 24.6 q3 -1.6 5.8 -.2 M33.4 24.4 q2.8 -1.4 5.8 .2" stroke="var(--hair)" stroke-width="1" fill="none" stroke-linecap="round"/>
+      <path d="M29.2 35.2 q2.8 2.2 5.6 0" stroke="var(--hair)" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="av-p2" viewBox="0 0 64 64">
+    <g clip-path="url(#av-clip)">
+      <rect width="64" height="64" fill="var(--accent)" opacity=".24"/>
+      <path d="M4 66 C4 53.5 16 47.5 32 47.5 C48 47.5 60 53.5 60 66 Z" fill="var(--skin)"/>
+      <g stroke="var(--hair)" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".85">
+        <path d="M10.2 55.4 h6.8 M10 58.8 l1.8 -2 l1.8 2 l1.8 -2 l1.8 2 M10.4 62.2 h6.2"/>
+        <path d="M51.8 53.6 v9.6 M48.6 56.6 h6.4 M48.8 60.6 c1 3.2 5.2 3.2 6.2 0"/>
+      </g>
+      <path d="M18.5 66 L21 50 C23.5 48.4 27 47.6 29.2 47.5 C29.8 53.5 34.2 53.5 34.8 47.5 C37 47.6 40.5 48.4 43 50 L45.5 66 Z" fill="var(--accent)"/>
+      <path d="M27 37 H37 V46.5 C35 49.5 29 49.5 27 46.5 Z" fill="var(--skin)"/>
+      <path d="M27 42.5 C30 45.5 34 45.5 37 42.5 V37 H27 Z" fill="#000" opacity=".12"/>
+      <path d="M35.6 40.4 v6 M34 43.4 l1.6 -1.8 l1.6 1.8" stroke="var(--hair)" stroke-width="1.15" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>
+      <circle cx="20.4" cy="29" r="2.6" fill="var(--skin)"/>
+      <circle cx="43.6" cy="29" r="2.6" fill="var(--skin)"/>
+      <ellipse cx="32" cy="27.5" rx="11.5" ry="13.5" fill="var(--skin)"/>
+      <path d="M19.6 28 C17.4 14.5 25.5 9.4 33.2 10.2 C41.4 9.8 47.4 15.6 44.4 28 C43.4 21.5 40.6 17.6 35 16.6 C29 15.6 23.4 17.2 19.6 28 Z" fill="var(--hair)"/>
+      <circle cx="27.8" cy="28.2" r="1.5" fill="var(--hair)"/>
+      <circle cx="36.2" cy="28.2" r="1.5" fill="var(--hair)"/>
+      <path d="M24.6 24.8 h5.6 M33.8 24.8 h5.6" stroke="var(--hair)" stroke-width="1.3" stroke-linecap="round"/>
+      <path d="M24.4 36.4 C26.6 33.4 30 33.6 32 35.2 C34 33.6 37.4 33.4 39.6 36.4 C37.4 37.6 34.4 36.8 32 36.4 C29.6 36.8 26.6 37.6 24.4 36.4 Z" fill="var(--hair)"/>
+      <path d="M29.6 39.2 q2.4 1.5 4.8 0" stroke="var(--hair)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="av-p3" viewBox="0 0 64 64">
+    <g clip-path="url(#av-clip)">
+      <rect width="64" height="64" fill="var(--accent)" opacity=".24"/>
+      <path d="M3 66 C3 53.5 16 47.5 32 47.5 C48 47.5 61 53.5 61 66 Z" fill="var(--accent)"/>
+      <path d="M26.5 37 H37.5 V47 C35.5 50 28.5 50 26.5 47 Z" fill="var(--skin)"/>
+      <path d="M26.5 43 C30 46 34 46 37.5 43 V37 H26.5 Z" fill="#000" opacity=".12"/>
+      <circle cx="19.6" cy="28.5" r="2.7" fill="var(--skin)"/>
+      <circle cx="44.4" cy="28.5" r="2.7" fill="var(--skin)"/>
+      <ellipse cx="32" cy="27" rx="12.3" ry="14" fill="var(--skin)"/>
+      <path d="M24.4 17.6 C27 15.2 31 14.4 34.4 14.9" stroke="#fff" stroke-width="1.7" fill="none" stroke-linecap="round" opacity=".42"/>
+      <path d="M19.8 28.5 C19.4 39.5 24.4 47 32 47.2 C39.6 47 44.6 39.5 44.2 28.5 C43 33 40.8 34.8 38.6 35.6 C36.6 34.6 34.4 34.2 32 34.6 C29.6 34.2 27.4 34.6 25.4 35.6 C23.2 34.8 21 33 19.8 28.5 Z" fill="var(--hair)"/>
+      <path d="M24 36.2 C26.4 32.8 30.2 33.2 32 35 C33.8 33.2 37.6 32.8 40 36.2 C37.6 37.6 34.4 36.8 32 36.4 C29.6 36.8 26.4 37.6 24 36.2 Z" fill="var(--hair)" stroke="var(--skin)" stroke-width=".7" stroke-opacity=".5"/>
+      <path d="M29 39.4 q3 2 6 0 q-3 -1.1 -6 0 Z" fill="var(--skin)"/>
+      <circle cx="27.4" cy="27.2" r="1.5" fill="var(--hair)"/>
+      <circle cx="36.6" cy="27.2" r="1.5" fill="var(--hair)"/>
+      <path d="M24.2 23.2 h5.8 M34 23.2 h5.8" stroke="var(--hair)" stroke-width="1.4" stroke-linecap="round"/>
+      <g fill="#fff" fill-opacity=".1" stroke="var(--hair)" stroke-width="1.1" stroke-linejoin="round">
+        <rect x="23.5" y="24.7" width="7.8" height="5.4" rx="2.4"/>
+        <rect x="32.7" y="24.7" width="7.8" height="5.4" rx="2.4"/>
+      </g>
+      <path d="M23.8 26 C24.4 24.9 30.4 24.9 31 26 M33 26 C33.6 24.9 39.6 24.9 40.2 26" stroke="var(--hair)" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+      <path d="M31.3 26.2 h1.4 M23.5 26.2 L19.9 26.7 M40.5 26.2 L44.1 26.7" stroke="var(--hair)" stroke-width="1" stroke-linecap="round"/>
+    </g>
+  </symbol>
+</svg>

@@ -1,0 +1,251 @@
+# =====================================================================
+#  AUSFLÜGE · Surf-Check Portugal
+# =====================================================================
+#
+#  Die Seite schlägt pro Tag ein bis zwei Ausflüge vor, abhängig von
+#  Wetter und Wind. Jedes Ziel gehört zu einer Basis (id aus spots.toml).
+#
+#  EIN ZIEL HINZUFÜGEN: Block "[[ausfluege]]" kopieren und ändern.
+#
+#  FELDER
+#  ------
+#    basis          id der Basis, zu der das Ziel gehört
+#    name           Name des Ziels
+#    symbol         Symbol auf der Seite: mountain, castle, swim, trail, tree, lighthouse, city
+#    fahrzeit_min   Fahrzeit in Minuten, eine Zahl (30) oder ein Bereich ([30, 40]).
+#                   Alle Angaben sind Schätzungen.
+#    bedingung      Wann das Ziel passt (eine oder mehrere):
+#                     jedes_wetter  passt bei jedem Wetter außer Starkregen
+#                     nordwind      geschützt oder trotzdem gut bei starkem Nordwind
+#                     regen         eine Alternative bei Regen
+#                     warm_ruhig    schön bei warmem, ruhigem Wetter (Baden, Wandern)
+#                     klar          braucht trockenes, klares Wetter
+#    dauer          kurz (bis etwa 2 Stunden), halbtag oder ganztag
+#    hund           erlaubt_leine (belegt) oder unklar (nicht belegt)
+#    beschreibung   ein bis zwei Sätze
+#    quelle         Link (optional)
+#
+#  SO WÄHLT DIE SEITE AUS (Zahlen stehen unten bei [regeln])
+#  ---------------------------------------------------------
+#    * Bei Regen über der Grenze: nur Ziele mit "regen".
+#    * Bei starkem Nordwind: nur Ziele mit "nordwind".
+#    * Bei warmem Wetter ohne Wind: Ziele mit "warm_ruhig" (Baden, Wandern) zuerst.
+#    * An Surftagen (ein Fenster mit Score ab surftag_ab_punkte für mindestens
+#      eine Person): nur kurze Ziele, als Nachmittagstipp.
+# =====================================================================
+
+[regeln]
+nordwind_ab_kn        = 15          # ab dieser Windstärke gilt Nordwind als stark
+nordwind_sektor_grad  = [315, 45]   # Wind aus diesem Bereich zählt als Nordwind
+regen_ab_prozent      = 50          # ab dieser Regenwahrscheinlichkeit gilt es als Regentag
+starkregen_ab_prozent = 80          # darüber fällt auch "jedes_wetter" weg
+warm_ab_c             = 18          # ab dieser Temperatur gilt es als warm
+ruhig_bis_kn          = 8           # unter dieser Windstärke gilt es als ruhig
+klar_regen_unter_prozent  = 30      # "klar" braucht weniger Regenwahrscheinlichkeit als das
+klar_wolken_unter_prozent = 70      # und weniger Bewölkung als das
+vorschlaege_pro_tag   = 2
+
+
+# =====================================================================
+#  BASIS CAMINHA (Hunderegeln meist nicht belegt, Leine annehmen)
+# =====================================================================
+
+[[ausfluege]]
+basis = "caminha"
+name = "Foz do Minho / Mata do Camarido"
+symbol = "tree"
+fahrzeit_min = 5
+bedingung = ["jedes_wetter", "nordwind"]
+dauer = "kurz"
+hund = "unklar"
+beschreibung = "Minho-Mündung mit Blick auf das Ínsua-Fort. Bei Nordwind teils im Wald geschützt. Passt bei jedem Wetter außer Starkregen."
+
+[[ausfluege]]
+basis = "caminha"
+name = "Praia da Mota (Minho-Flussstrand)"
+symbol = "swim"
+fahrzeit_min = [10, 20]
+bedingung = ["warm_ruhig"]
+dauer = "kurz"
+hund = "unklar"
+beschreibung = "Baden bei warmem, ruhigem Wetter, am besten nahe Hochwasser."
+
+[[ausfluege]]
+basis = "caminha"
+name = "Monte de Santa Luzia (Viana)"
+symbol = "mountain"
+fahrzeit_min = 30
+bedingung = ["nordwind", "klar"]
+dauer = "kurz"
+hund = "erlaubt_leine"
+beschreibung = "Aussicht, auch bei Wind, aber nicht bei Regen. Hund an der Leine erlaubt, nicht in der Basilika."
+
+[[ausfluege]]
+basis = "caminha"
+name = "Serra d'Arga / Lagoa da Esturranha"
+symbol = "trail"
+fahrzeit_min = [30, 40]
+bedingung = ["warm_ruhig"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Wanderung und Bergsee bei warmem, ruhigem Wetter. Wenig Infrastruktur, schlechter Empfang."
+
+[[ausfluege]]
+basis = "caminha"
+name = "Valença, Festung"
+symbol = "castle"
+fahrzeit_min = 30
+bedingung = ["regen"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Regen-Alternative: Altstadt, Cafés und der Wallgang mit Blick nach Tui."
+
+[[ausfluege]]
+basis = "caminha"
+name = "Peneda-Gerês (Soajo / Lindoso)"
+symbol = "mountain"
+fahrzeit_min = [60, 90]
+bedingung = ["klar"]
+dauer = "ganztag"
+hund = "erlaubt_leine"
+beschreibung = "Ein ganzer Tag bei trockenem Wetter: Wanderung und Wasserfälle. Hund an der Leine."
+
+[[ausfluege]]
+basis = "caminha"
+name = "A Guarda / Monte Santa Trega (Spanien)"
+symbol = "lighthouse"
+fahrzeit_min = [35, 40]
+bedingung = ["klar"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Sonnenuntergang und Küstenweg Richtung Oia. Mit der Fähre ab Caminha."
+
+[[ausfluege]]
+basis = "caminha"
+name = "Ecovia am Rio Minho (ab Vila Nova de Cerveira)"
+symbol = "trail"
+fahrzeit_min = 20
+bedingung = ["nordwind"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Flach und windgeschützt bei Nordwind."
+
+
+# =====================================================================
+#  BASIS VAGUEIRA
+# =====================================================================
+
+[[ausfluege]]
+basis = "vagueira"
+name = "Strand und Dünen Vagueira / Costa Nova / Barra"
+symbol = "swim"
+fahrzeit_min = [0, 15]
+bedingung = ["jedes_wetter"]
+dauer = "kurz"
+hund = "erlaubt_leine"
+beschreibung = "Spaziergang bei jedem Wetter. Außerhalb der Badesaison wird ein Hund an der Leine meist geduldet."
+
+[[ausfluege]]
+basis = "vagueira"
+name = "Reserva Natural das Dunas de São Jacinto"
+symbol = "trail"
+fahrzeit_min = [25, 40]
+bedingung = ["warm_ruhig"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Holzstege und Rundwege mit 3,3 und 7 km, bei warmem, ruhigem Wetter. Die Hunderegel ist nicht belegt, am Besucherzentrum fragen. Anfahrt über Torreira."
+
+[[ausfluege]]
+basis = "vagueira"
+name = "Aveiro Stadt"
+symbol = "city"
+fahrzeit_min = [25, 30]
+bedingung = ["regen"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Regen-Alternative: Kanäle und Altstadt. Es gibt den Hundepark Parque Canino da Forca-Vouga."
+
+[[ausfluege]]
+basis = "vagueira"
+name = "Pateira de Fermentelos"
+symbol = "tree"
+fahrzeit_min = [40, 50]
+bedingung = ["warm_ruhig"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Die größte Lagune der iberischen Halbinsel, gut für Vogelbeobachtung. Bei ruhigem, warmem Wetter."
+
+[[ausfluege]]
+basis = "vagueira"
+name = "Mata Nacional do Buçaco"
+symbol = "tree"
+fahrzeit_min = [60, 75]
+bedingung = ["nordwind", "regen"]
+dauer = "ganztag"
+hund = "unklar"
+beschreibung = "Waldwege, bei Nordwind windgeschützt, auch in einer Regenpause schön. Die Hunderegel ist nicht belegt."
+
+
+# =====================================================================
+#  BASIS BORDEIRA (Hund auf der Rota Vicentina an der Leine erlaubt)
+# =====================================================================
+
+[[ausfluege]]
+basis = "bordeira"
+name = "Fishermen's Trail, Carrapateira bis Arrifana"
+symbol = "trail"
+fahrzeit_min = 0
+bedingung = ["warm_ruhig"]
+dauer = "ganztag"
+hund = "erlaubt_leine"
+beschreibung = "19,8 km, etwa 4:45 Stunden, 5,5 km davon im Sand, wenig Schatten. Nur bei mildem, ruhigem Wetter, nicht bei Hitze. Besser kürzere Teilstücke gehen. Start im Ort."
+
+[[ausfluege]]
+basis = "bordeira"
+name = "Cabo de São Vicente"
+symbol = "lighthouse"
+fahrzeit_min = [40, 45]
+bedingung = ["klar"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Klippen, Leuchtturm und Sonnenuntergang bei klarem, trockenem Wetter. Sehr windexponiert."
+
+[[ausfluege]]
+basis = "bordeira"
+name = "Sagres, Festung und Ort"
+symbol = "castle"
+fahrzeit_min = [30, 35]
+bedingung = ["nordwind"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Ein Ziel für Nordwind-Tage, an der Südküste ist es ruhiger. Die Festung kostet 3 EUR und ist von Oktober bis April bis 17:30 Uhr offen."
+
+[[ausfluege]]
+basis = "bordeira"
+name = "Aljezur"
+symbol = "castle"
+fahrzeit_min = 25
+bedingung = ["regen"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Regen-Alternative: maurische Burg und vier Museen mit Kombiticket. Hunde drinnen unklar. Der Stadtpfad PR1 AJZ ist 4 km lang."
+
+[[ausfluege]]
+basis = "bordeira"
+name = "Monchique / Fóia"
+symbol = "mountain"
+fahrzeit_min = 60
+bedingung = ["nordwind", "klar"]
+dauer = "ganztag"
+hund = "unklar"
+beschreibung = "902 m hoch, Rundwanderung mit 14,75 km in etwa 4 Stunden, in den Tälern windgeschützt. Nicht bei Nebel. Eine Zufahrtsschranke an der N266 wurde gemeldet, vorher prüfen."
+
+[[ausfluege]]
+basis = "bordeira"
+name = "Lagos, Ponta da Piedade und Altstadt"
+symbol = "city"
+fahrzeit_min = [50, 60]
+bedingung = ["nordwind"]
+dauer = "halbtag"
+hund = "unklar"
+beschreibung = "Ein Ziel für Nordwind-Tage: Kalkklippen und Altstadt. Nach Regen sind die Felsen instabil."

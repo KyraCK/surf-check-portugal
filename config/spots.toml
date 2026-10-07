@@ -1,0 +1,885 @@
+# =====================================================================
+#  BASEN UND SPOTS · Surf-Check Portugal
+# =====================================================================
+#
+#  Eine BASIS ist der Ort, an dem ihr gerade wohnt (mit Zeitraum).
+#  Jede Basis hat eine Liste von Spots. Die Seite zeigt automatisch die
+#  Basis, die heute gilt, und bietet einen Umschalter für die anderen.
+#
+#  EINEN SPOT HINZUFÜGEN
+#  ---------------------
+#  1. Kopiere einen kompletten Block "[spots.xyz]" weiter unten.
+#  2. Gib ihm einen neuen, kurzen Namen ohne Leerzeichen und Umlaute
+#     (z. B. [spots.ofir]).
+#  3. Ändere die Werte.
+#  4. Trage den Namen (ohne "spots.") in die Liste "spots" der passenden
+#     Basis ein.
+#
+#  Felder, zu denen es keine belegte Angabe gibt, lässt du einfach weg.
+#  Die Seite zeigt dann einen Strich statt eines erfundenen Werts.
+#
+#  ABKÜRZUNGEN IN DEN QUELLEN: SF = surf-forecast.com, MS = mondo.surf,
+#  SA = thesurfatlas.com.
+#
+#  RICHTUNGEN sind Gradzahlen: 0 = Nord, 90 = Ost, 180 = Süd, 270 = West.
+#  Bei Wind und Swell ist immer die Richtung gemeint, AUS der er kommt.
+#  Ein Bereich [von, bis] läuft im Uhrzeigersinn und darf über Nord
+#  gehen, zum Beispiel [319, 98] für Nordwest über Nord bis Ost.
+#  Nennt eine Quelle nur Himmelsrichtungen, steht hier der 45-Grad-
+#  Sektor um diese Richtung (West = 247 bis 292), und im Feld "unsicher"
+#  steht ein Hinweis.
+#
+#  FELDER PRO SPOT
+#  ---------------
+#    name, lat, lon          Name und Koordinaten (Dezimalgrad, West ist minus)
+#    swell_dir_deg           Swell-Richtung [von, bis]
+#    wind_dir_deg            ablandiger Wind [von, bis]
+#    tide                    niedrig, niedrig_mittel, mittel, mittel_hoch, hoch, alle
+#                            (ohne Zeile: keine Tide-Wirkung)
+#    boden, wellentyp, niveau  nur zur Information
+#    groesse_min_m           darunter läuft der Spot nicht (Wellenhöhe am Spot)
+#    groesse_max_m           darüber wird er zu schwierig oder unruhig
+#    korrekturfaktor         Modellhöhe mal Faktor = Höhe der brechenden Welle am Spot
+#    ausweich                true = weiter weg, nur im Fazit, wenn deutlich besser
+#    fahrzeit_min            geschätzte Fahrzeit von der Basis (nur wenn belegt)
+#    notizen, unsicher       Freitext (unsicher = Quellen widersprechen sich)
+#    quellen, webcams, vergleich   Links (nur Links, nichts wird ausgelesen)
+# =====================================================================
+
+
+# ---------------------------------------------------------------------
+#  BASEN
+# ---------------------------------------------------------------------
+# Messstationen (pegel, ipma_*) liefern gemessene Gezeiten, Wassertemperatur
+# und Warnungen. Die Zuordnung ist hier einmal festgelegt.
+
+[[basen]]
+id      = "caminha"
+name    = "Caminha (Minho)"
+von     = 2026-10-07
+bis     = 2026-10-10
+spots   = ["moledo", "afife", "vila_praia_de_ancora", "cabedelo", "ofir", "matosinhos"]
+pegel      = "74-267"     # Pegel Viana do Castelo (Instituto Hidrográfico)
+pegel_test = "Rückwärtstest vom 7.10.2026 über 14 Tage: im Schnitt 2 Minuten daneben, höchstens 7."
+ipma_stadt = 1160900      # IPMA Stadt-Vorhersage Viana do Castelo
+ipma_see   = 1160926      # IPMA Küstenpunkt vor Viana do Castelo
+ipma_warngebiet = "VCT"   # IPMA Warngebiet Viana do Castelo
+# Bade-Ziel dieser Basis (optional). Ohne diese Zeile entfällt der Bade-Abschnitt.
+baden = "Praia da Mota, Minho-Mündung"
+links = [
+  { text = "IPMA Caminha", url = "https://www.ipma.pt/pt/otempo/prev.localidade.hora/#Viana%20do%20Castelo&Caminha" },
+]
+
+[[basen]]
+id      = "vagueira"
+name    = "Vagueira (Aveiro)"
+von     = 2026-10-11
+bis     = 2026-10-13
+spots   = ["vagueira", "costa_nova", "barra", "mira", "torreira", "furadouro", "figueira_cabedelo"]
+pegel      = "857-177"    # Pegel Aveiro, Molhe Central
+pegel_test = "Rückwärtstest vom 7.10.2026 über 14 Tage: im Schnitt 11 Minuten daneben, höchstens 26. Ungenauer als bei Viana, weil der Pegel an der Lagune liegt."
+ipma_stadt = 1010500      # IPMA Aveiro
+ipma_see   = 1060526      # nächster IPMA-Küstenpunkt: Figueira da Foz, etwa 45 km südlich
+ipma_warngebiet = "AVR"   # IPMA Warngebiet Aveiro
+links = [
+  { text = "IPMA Aveiro", url = "https://www.ipma.pt/pt/otempo/prev.localidade.hora/#Aveiro&Aveiro" },
+]
+
+[[basen]]
+id      = "bordeira"
+name    = "Bordeira (Costa Vicentina)"
+von     = 2026-10-14
+bis     = 2026-10-28
+# Südküste (ab Mareta) als Ausweich bei großem Westswell oder starkem Nordwind
+spots   = ["bordeira", "carrapateira_sued", "amado", "vale_figueiras", "arrifana", "arrifana_right",
+           "monte_clerigo", "castelejo", "cordoama", "beliche", "tonel",
+           "mareta", "zavial", "burgau", "praia_da_luz", "meia_praia"]
+pegel      = "859-301"    # Pegel Sines, Terminal XXI (nächster Pegel, etwa 70 km nördlich)
+pegel_test = "Rückwärtstest vom 7.10.2026 am Pegel Sines: im Schnitt 2 Minuten daneben, höchstens 7. Die Modellkurve bei Bordeira weicht nur 5 Minuten von der bei Sines ab, der Pegel liegt aber etwa 70 km entfernt."
+ipma_stadt = 1081505      # IPMA Sagres (nächste Stadt-Vorhersage)
+ipma_see   = 1081526      # IPMA Küstenpunkt bei Sagres
+ipma_warngebiet = "FAR"   # IPMA Warngebiet Faro
+links = [
+  { text = "IPMA Aljezur", url = "https://www.ipma.pt/pt/otempo/prev.localidade.hora/#Faro&Aljezur" },
+]
+
+
+# =====================================================================
+#  BASIS CAMINHA
+# =====================================================================
+
+[spots.moledo]
+name  = "Moledo"
+lat   = 41.851
+lon   = -8.868
+# Swell kommt aus Südwest bis Nordwest (MS 207 bis 332 Grad).
+swell_dir_deg = [207, 332]
+# Ablandiger Wind: Nordost, Ost, Südost.
+wind_dir_deg  = [36, 144]
+tide  = "mittel"
+boden     = "Sand"
+wellentyp = "Beachbreak, Lefts und Rights"
+niveau    = "Intermediate (SF), alle Level (MS)"
+# Ab dieser Wellenhöhe läuft der Spot (MS: etwa 0,6 m). Es gibt keine
+# Angabe, bis wohin er geht, deshalb steht hier kein groesse_max_m.
+groesse_min_m = 0.6
+korrekturfaktor = 1.0
+notizen = """
+Gefährliche Rips (SF). Felsen beim Ein- und Ausstieg (MS).
+Erster Messpunkt 7.10.2026: Modelle 0,66 bis 0,88 m, vor Ort deutlich unter 1 m.
+Zweiter Messpunkt 7.10.2026 gegen 13 Uhr (Webcam, nur Schätzung): Modelle 0,9 bis 1,2 m am Spot, geschätzt etwa 0,9 m oder etwas weniger. Der eigentliche Spot liegt weiter draußen Richtung der Festung im Meer. Moledo ist exponierter und wirkt weniger glatt als andere Spots in der Nähe.
+Faktor bleibt vorerst 1.0, erst nach zwei oder drei weiteren Vergleichen anpassen.
+Windguru-Station Moledo: 48935.
+"""
+quellen = [
+  "https://www.surf-forecast.com/breaks/Moledo",
+  "https://mondo.surf/surf-spot/praia-de-moledo/guide/5101",
+]
+webcams = ["https://www.surf-forecast.com/breaks/Moledo/webcams/latest"]
+vergleich = [
+  "https://www.windguru.cz/48935",
+  "https://www.surf-forecast.com/breaks/Moledo/forecasts/latest",
+]
+unsicher = """
+Tide: Die Quellen widersprechen sich. SF: um Hochwasser. MS: Niedrigwasser mit auflaufendem Wasser. Für den Score steht hier der mittlere Wert "mittel".
+Swell: MS gibt 207 bis 332 Grad an, SF nur West. Für den Score gilt der breitere MS-Bereich.
+"""
+
+
+[spots.afife]
+name  = "Afife"
+lat   = 41.78
+lon   = -8.87
+# Die Quellen nennen nur Himmelsrichtungen, keine Grad: SF "West", SA
+# "Nordwest". Hier West bis Nordwest als 45-Grad-Sektoren eingetragen.
+swell_dir_deg = [247, 337]
+# Quelle: "Ost ablandig". Als Sektor Ost plus/minus 22,5 Grad eingetragen.
+wind_dir_deg  = [67, 112]
+# Mittelwert aus SF (alle Tiden) und SA (Niedrigwasser, bei Hochwasser dumpy).
+tide  = "niedrig_mittel"
+boden     = "Sand mit Felsfingern"
+wellentyp = "Beachbreak, Left an den Felsen im Süden"
+niveau    = "prime intermediate (SA)"
+# SA: über 2 m braucht viel Paddelkraft. Eine Mindesthöhe ist nicht belegt.
+groesse_max_m = 2.0
+korrekturfaktor = 1.0
+notizen = """
+Besser bei kleinen bis mittleren Swells (SA). Optimal 1,2 bis 1,8 m (SA).
+Nortada-exponiert. Starke Rips bei großem Swell.
+Webcam: Surfschule Arda (MEO Beachcam Afife).
+"""
+quellen = [
+  "https://www.surf-forecast.com/breaks/Afife",
+  "https://thesurfatlas.com/surfing-portugal/praia-de-afife/",
+]
+webcams = [
+  "https://beachcam.meo.pt/livecams/viana-do-castelo-afife-arda/",
+  "https://www.surf-forecast.com/breaks/Afife/webcams/latest",
+]
+vergleich = ["https://www.surf-forecast.com/breaks/Afife/forecasts/latest"]
+unsicher = """
+Tide: SF "alle", SA "Niedrigwasser". Für den Score steht der Mittelwert "niedrig_mittel".
+Swell: SF "West", SA "Nordwest". Die Gradbereiche für Swell und Wind sind aus Himmelsrichtungen abgeleitet, nicht aus Gradangaben der Quellen. Entscheidung: Es gilt, was die Quellen sagen (Ost). Moledo hat 36 bis 144 Grad. Soll Afife denselben Bereich bekommen, setze wind_dir_deg auf [36, 144].
+"""
+
+
+[spots.vila_praia_de_ancora]
+name  = "Vila Praia de Âncora"
+lat   = 41.81
+lon   = -8.87
+swell_dir_deg = [247, 292]     # SF: "West", als 45-Grad-Sektor eingetragen
+wind_dir_deg  = [22, 67]       # SF: "Nordost", als 45-Grad-Sektor eingetragen
+tide  = "niedrig"              # SF: um Niedrigwasser
+wellentyp = "River break (SF)"
+korrekturfaktor = 1.0
+notizen = """
+Oft voll. Der Boden ist in den Quellen nicht belegt.
+"""
+quellen = ["https://www.surf-forecast.com/breaks/Vila-Praiade-Ancora"]
+webcams = ["https://beachcam.meo.pt/livecams/vila-praia-de-ancora/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Vila-Praiade-Ancora/forecasts/latest"]
+unsicher = """
+Die Gradbereiche für Swell und Wind sind aus den Himmelsrichtungen West und Nordost abgeleitet, die Quelle nennt keine Grad.
+"""
+
+
+[spots.cabedelo]
+name  = "Cabedelo (Viana do Castelo)"
+lat   = 41.677
+lon   = -8.836
+swell_dir_deg = [188, 330]     # SW bis NW
+wind_dir_deg  = [319, 98]      # N/NE/E, läuft über Nord
+tide  = "niedrig_mittel"       # MS: niedrig bis mittel, fallend optimal
+boden     = "Sand"
+wellentyp = "Beachbreak"
+niveau    = "Anfänger bis Intermediate (MS: anfängerfreundlich, SF: Intermediate)"
+groesse_min_m = 0.6            # MS: etwa 0,6 m
+korrekturfaktor = 1.0
+notizen = """
+Bei starkem Nordwind Windsurf-Spot.
+Achtung beim Suchen bei surf-forecast.com: Der Name "Cabedelo" dort ist Figueira da Foz. Für Viana gilt der Eintrag "Praia-do-Cabedelo".
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/cabedelo-de-viana/guide/5096",
+  "https://www.surf-forecast.com/breaks/Praia-do-Cabedelo",
+]
+webcams = ["https://beachcam.meo.pt/livecams/viana-do-castelo-cabedelo/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Praia-do-Cabedelo/forecasts/latest"]
+unsicher = """
+Niveau: MS "anfängerfreundlich", SF "Intermediate".
+"""
+
+
+[spots.ofir]
+name  = "Ofir / Esposende"
+lat   = 41.517
+lon   = -8.790
+swell_dir_deg = [197, 339]     # SW bis NW
+wind_dir_deg  = [24, 134]      # NE/E
+tide  = "mittel_hoch"          # Mittelwert aus SF (mittel, steigend) und MS (mittel bis hoch)
+boden     = "Sand"
+wellentyp = "Beachbreak, mehrere Peaks"
+korrekturfaktor = 1.0
+notizen = """
+Gefährliche Rips (SF).
+"""
+quellen = [
+  "https://www.surf-forecast.com/breaks/Esposende",
+  "https://mondo.surf/surf-spot/ofir/guide/5088",
+]
+webcams = [
+  "https://beachcam.meo.pt/livecams/ofir/",
+  "https://www.surftotal.com/camaras-report/grande-porto-douro-litoral/azurara",
+]
+vergleich = ["https://www.surf-forecast.com/breaks/Esposende/forecasts/latest"]
+unsicher = """
+Tide: SF "mittel, steigend", MS "mittel bis hoch". Für den Score steht "mittel_hoch".
+"""
+
+
+[spots.matosinhos]
+name  = "Matosinhos"
+lat   = 41.173
+lon   = -8.693
+swell_dir_deg = [192, 308]     # SW/W (SA nennt Nordwest)
+wind_dir_deg  = [344, 129]     # N/NE/E, läuft über Nord
+tide  = "niedrig_mittel"       # niedrig bis auflaufend
+boden     = "Sand, Fels im Süden, Seeigel"
+wellentyp = "Beachbreak plus Left-Point Castelo do Queijo und Jetty-Right"
+niveau    = "Anfänger bis Intermediate"
+groesse_min_m = 0.6            # MS: etwa 0,6 m
+ausweich = true
+korrekturfaktor = 1.0
+notizen = """
+Ausweichspot, verträgt mehr Größe. Optimal 1,2 bis 2 m (SA), hält bis doppelt überkopf (MS).
+Nordwind kann das Jetty-Right ausblasen. Wasserqualität nach Regen prüfen.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/matosinhos/guide/5106",
+  "https://thesurfatlas.com/surfing-portugal/matosinhos-surf/",
+]
+webcams = [
+  "https://beachcam.meo.pt/livecams/praia-de-matosinhos/",
+  "https://www.surftotal.com/camaras-report/grande-porto-douro-litoral/matosinhos-hd",
+]
+unsicher = """
+Swell: SA nennt Nordwest, MS Südwest bis West. Für den Score gilt 192 bis 308 Grad (MS).
+"""
+
+
+# =====================================================================
+#  BASIS VAGUEIRA
+# =====================================================================
+
+[spots.vagueira]
+name  = "Vagueira"
+lat   = 40.561
+lon   = -8.774
+swell_dir_deg = [211, 337]     # SW bis NW (SF nur WNW)
+wind_dir_deg  = [52, 156]      # ESE ablandig
+tide  = "mittel_hoch"          # MS
+boden     = "Sand (MS) oder Breakwater mit Felsen (SF)"
+wellentyp = "Lefts und Rights, mehrere Peaks, 3-Meilen-Strand"
+niveau    = "Intermediate (SF), anfängerfreundlich (MS, SA)"
+korrekturfaktor = 1.0
+notizen = """
+Typisch 0,7 bis 1,7 m. Meist leer.
+SA nennt Praia do Labrego in der Nähe als oft geschützter (Lage nicht geprüft).
+"""
+quellen = [
+  "https://www.surf-forecast.com/breaks/Praia-da-Vagueira",
+  "https://mondo.surf/surf-spot/praia-da-vagueira/guide/1208",
+  "https://thesurfatlas.com/surfing-portugal/aviero-beaches/",
+]
+webcams = ["https://beachcam.meo.pt/livecams/vagueira/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Praia-da-Vagueira/forecasts/latest"]
+unsicher = """
+Boden: SF "Breakwater" mit Felsen, MS "Sand".
+Niveau: SF Intermediate, MS und SA anfängerfreundlich.
+"""
+
+
+[spots.costa_nova]
+name  = "Costa Nova"
+lat   = 40.63
+lon   = -8.75
+swell_dir_deg = [247, 292]     # SF: "West", als 45-Grad-Sektor eingetragen
+wind_dir_deg  = [67, 112]      # SF: "Ost", als 45-Grad-Sektor eingetragen
+tide  = "alle"                 # SF
+boden     = "Strand mit Buhne, Riff-Sektionen und Sandbänke (SA)"
+wellentyp = "Lefts und Rights"
+niveau    = "Intermediate"
+korrekturfaktor = 1.0
+notizen = """
+Verschmutzung und Rips (SF). Ruhiger als Barra.
+"""
+quellen = ["https://www.surf-forecast.com/breaks/Costa-Nova"]
+webcams = ["https://beachcam.meo.pt/livecams/costa-nova/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Costa-Nova/forecasts/latest"]
+unsicher = """
+Die Gradbereiche für Swell und Wind sind aus den Himmelsrichtungen West und Ost abgeleitet.
+"""
+
+
+[spots.barra]
+name  = "Praia da Barra"
+lat   = 40.645
+lon   = -8.763
+swell_dir_deg = [202, 292]     # SW bis W, große NW-Swells bevorzugt (SA)
+wind_dir_deg  = [22, 157]      # NE bis SSE
+tide  = "niedrig_mittel"       # SF: Niedrigwasser, MS: alle, SA: bei Low hohl, Mid weicher
+boden     = "Sand"
+wellentyp = "Rechte \"Wall\", durch die Mole gegen Nordwind geschützt (SA)"
+niveau    = "Fortgeschritten bei Low (SA)"
+korrekturfaktor = 1.0
+notizen = """
+Gefährliche Rips.
+"""
+quellen = [
+  "https://www.surf-forecast.com/breaks/Praiada-Barra",
+  "https://mondo.surf/surf-spot/praia-da-barra/guide/5129",
+]
+webcams = [
+  "https://beachcam.meo.pt/livecams/praia-da-barra/",
+  "https://www.windfinder.com/webcams/barra",
+]
+vergleich = ["https://www.surf-forecast.com/breaks/Praiada-Barra/forecasts/latest"]
+unsicher = """
+Tide: SF "Niedrigwasser", MS "alle", SA "bei Low hohl, bei Mid weicher". Für den Score steht "niedrig_mittel".
+"""
+
+
+[spots.mira]
+name  = "Mira"
+lat   = 40.457
+lon   = -8.807
+swell_dir_deg = [221, 348]     # SW bis NNW
+wind_dir_deg  = [51, 159]      # E bis SSE
+tide  = "mittel"               # SF: alle, MS: Mitte
+boden     = "Sand"
+wellentyp = "Kurze Lefts und Rights"
+niveau    = "Anfängerfreundlich"
+groesse_min_m = 0.6
+korrekturfaktor = 1.0
+notizen = """
+Wenig Crowd. Bojen im Wasser.
+"""
+quellen = [
+  "https://www.surf-forecast.com/breaks/Praiade-Mira",
+  "https://mondo.surf/surf-spot/praia-de-mira/guide/5131",
+]
+webcams = ["https://beachcam.meo.pt/livecams/praia-de-mira/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Praiade-Mira/forecasts/latest"]
+unsicher = """
+Tide: SF "alle", MS "Mitte". Für den Score steht "mittel".
+"""
+
+
+[spots.torreira]
+name  = "Torreira"
+lat   = 40.76
+lon   = -8.71
+swell_dir_deg = [202, 337]     # SSW bis NNW
+wind_dir_deg  = [67, 157]      # ENE bis SSE
+tide  = "alle"
+boden     = "Sand"
+wellentyp = "A-Frames"
+niveau    = "Alle Level"
+korrekturfaktor = 1.0
+notizen = """
+Nur am Paredão (Mole) surfen (MS). Rips und Undertow.
+"""
+quellen = [
+  "https://www.surf-forecast.com/breaks/Praia-da-Torreira",
+  "https://mondo.surf/surf-spot/praia-da-torreira/guide/5077",
+]
+webcams = ["https://beachcam.meo.pt/livecams/praia-da-torreira/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Praia-da-Torreira/forecasts/latest"]
+
+
+[spots.furadouro]
+name  = "Furadouro"
+# SF nennt 40.91 N / 8.67 W, MS 40.87 N / 8.68 W. Die Ortssuche von Open-Meteo
+# findet Furadouro bei Ovar auf 40.873 N / 8.676 W, deshalb gilt dieser Wert.
+lat   = 40.873
+lon   = -8.676
+swell_dir_deg = [202, 22]      # SW bis N, läuft über Nord
+wind_dir_deg  = [22, 157]      # NE bis SSE
+tide  = "mittel"               # fallend bis mittel
+boden     = "Sand"
+wellentyp = "A-Frames an Buhnen"
+niveau    = "Ideal 1 bis 1,5 m"
+groesse_max_m = 2.0            # MS: über 2 m anspruchsvoll
+ausweich = true
+korrekturfaktor = 1.0
+notizen = """
+Ausweich bei mehr Größe. Ideal 1 bis 1,5 m, über 2 m anspruchsvoll (MS). Felsen im Lineup (SF).
+"""
+quellen = [
+  "https://www.surf-forecast.com/breaks/Furadouro",
+  "https://mondo.surf/surf-spot/furadouro/guide/5138",
+]
+webcams = ["https://beachcam.meo.pt/livecams/furadouro/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Furadouro/forecasts/latest"]
+unsicher = """
+Koordinaten: SF 40.91 N / 8.67 W, MS 40.87 N / 8.68 W. Eingetragen ist 40.873 N / 8.676 W (Ortssuche), bitte vor Ort prüfen.
+"""
+
+
+[spots.figueira_cabedelo]
+name  = "Figueira da Foz, Cabedelo"
+lat   = 40.15
+lon   = -8.87
+swell_dir_deg = [247, 292]     # "West", als 45-Grad-Sektor eingetragen
+wind_dir_deg  = [67, 112]      # "Ost", als 45-Grad-Sektor eingetragen
+# Die Tide ist in den Quellen nicht belegt, deshalb gibt es hier kein "tide".
+boden     = "Sand mit Mole"
+wellentyp = "Lange Rechte, die Mole schützt gegen Nordwind"
+niveau    = "Intermediate"
+ausweich = true
+fahrzeit_min = 50              # Angabe der Nutzerin: etwa 50 Minuten
+korrekturfaktor = 1.0
+notizen = """
+Typisch 1 bis 2 m. Gefährliche Rips. Bei guten Bedingungen voll.
+Bei surf-forecast.com heißt der Spot "Cabedelo" (der Eintrag für Viana do Castelo heißt dort "Praia-do-Cabedelo").
+"""
+quellen = [
+  "https://www.surf-forecast.com/breaks/Cabedelo",
+  "https://surfingfigueira.com/en/blog/693/surf-spots-in-figueira-da-foz-discover-the-main-ones",
+]
+webcams = ["https://beachcam.meo.pt/livecams/figueira-da-foz-cabedelo/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Cabedelo/forecasts/latest"]
+unsicher = """
+Tide nicht belegt. Die Gradbereiche für Swell und Wind sind aus den Himmelsrichtungen West und Ost abgeleitet.
+"""
+
+
+# =====================================================================
+#  BASIS BORDEIRA / CARRAPATEIRA (Costa Vicentina)
+# =====================================================================
+
+[spots.bordeira]
+name  = "Praia da Bordeira"
+lat   = 37.201
+lon   = -8.904
+swell_dir_deg = [246, 2]       # W bis N, läuft über Nord
+wind_dir_deg  = [75, 187]      # E/SE/S
+tide  = "mittel_hoch"          # MS: alle, SA: ab Halbtide, bei Low Shore-Dump
+boden     = "Sand mit Fels"
+wellentyp = "Mehrere Peaks, Linkspoint an den Klippen"
+niveau    = "Level 1 (SF), Intermediate bis Advanced (SA)"
+groesse_min_m = 0.6
+korrekturfaktor = 1.0
+notizen = """
+Starke Strömung nach Norden und am Flussmund (SA). Weniger voll als Amado.
+Eine Webcam direkt am Spot gibt es nicht, die Arrifana-Cam dient als grober Anhaltspunkt für die Westküste.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/praia-do-bordeira/guide/5006",
+  "https://www.surf-forecast.com/breaks/Praia-do-Bordeira",
+  "https://thesurfatlas.com/surfing-portugal/carrapateira-surf/",
+]
+webcams = ["https://beachcam.meo.pt/livecams/arrifana/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Praia-do-Bordeira/forecasts/latest"]
+unsicher = """
+Tide: MS "alle", SA "ab Halbtide, bei Low Shore-Dump". Für den Score steht "mittel_hoch".
+Niveau: SF Level 1, SA Intermediate bis Advanced.
+"""
+
+
+[spots.carrapateira_sued]
+name  = "Carrapateira, Südpoint"
+lat   = 37.200
+lon   = -8.906
+swell_dir_deg = [247, 22]      # W/NW/N, läuft über Nord
+wind_dir_deg  = [67, 202]      # E/SE/S
+tide  = "mittel"               # MS: Point Low bis Mid, Sandbank-Peaks Mid bis High
+boden     = "Sand und Fels"
+wellentyp = "Linkswelle am Südende"
+niveau    = "Intermediate"
+korrekturfaktor = 1.0
+notizen = """
+Der Point kann voll werden.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/carrapateira/guide/4983",
+  "https://www.surf-forecast.com/breaks/Carrapateira",
+]
+webcams = ["https://beachcam.meo.pt/livecams/arrifana/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Carrapateira/forecasts/latest"]
+unsicher = """
+Tide: Der Point läuft bei Low bis Mid, die Sandbank-Peaks bei Mid bis High. Für den Score steht "mittel".
+"""
+
+
+[spots.amado]
+name  = "Amado"
+lat   = 37.17
+lon   = -8.90
+swell_dir_deg = [207, 350]     # SW bis NW
+wind_dir_deg  = [40, 162]      # NE/E/SE
+tide  = "mittel"               # MS: Low bis Mid, SA: Mid bis High
+boden     = "Sand mit Felsen, Sandbänke wechseln saisonal"
+wellentyp = "Mitte A-Frames, Norden längere Rechte, Süden hohler"
+niveau    = "Anfängergeeignet (MS)"
+korrekturfaktor = 1.0
+notizen = """
+Periode 10 bis 14 s (SA, die einzige belegte Periodenangabe). Anfängergeeignet bis etwa 1,8 m (MS), bei zu viel Swell schließt der Spot aus (SA).
+Felsen bei allen Tiden, Rips bei mehr Swell. Im Oktober eher leer. Etwa 5 Minuten ab Carrapateira.
+Die MEO-Cam "praia-do-amado" ist nach dem Namen zugeordnet, bitte prüfen (es gibt auch "portimao-praia-do-amado").
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/praia-do-amado/guide/4984",
+  "https://www.surf-forecast.com/breaks/Praiado-Amado",
+  "https://thesurfatlas.com/surfing-portugal/praia-do-amado-surf/",
+]
+webcams = ["https://beachcam.meo.pt/livecams/praia-do-amado/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Praiado-Amado/forecasts/latest"]
+unsicher = """
+Tide: MS "Low bis Mid", SA "Mid bis High". Für den Score steht "mittel".
+"""
+
+
+[spots.vale_figueiras]
+name  = "Vale Figueiras"
+lat   = 37.247
+lon   = -8.87
+swell_dir_deg = [202, 337]     # SW bis NW
+wind_dir_deg  = [22, 157]      # MS: "NE/E/SE", als Sektor von NE bis SE eingetragen
+tide  = "alle"                 # MS
+boden     = "Sand und Fels"
+wellentyp = "Beachbreak"
+niveau    = "Anfänger bis Erfahrene"
+korrekturfaktor = 1.0
+notizen = """
+Wenig Crowd. Rips und Undertow. Zufahrt über eine Sandpiste ab der N268, 5 bis 10 Minuten.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/vale-figueira/guide/4970",
+  "https://www.surf-forecast.com/breaks/Vale-Figueira",
+]
+webcams = ["https://beachcam.meo.pt/livecams/arrifana/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Vale-Figueira/forecasts/latest"]
+unsicher = """
+Der Windbereich ist aus den Himmelsrichtungen NE/E/SE abgeleitet, die Quelle nennt keine Grad.
+"""
+
+
+[spots.arrifana]
+name  = "Arrifana (Beachbreak)"
+lat   = 37.294
+lon   = -8.873
+swell_dir_deg = [292, 337]     # SA: "Nordwest", als 45-Grad-Sektor eingetragen
+wind_dir_deg  = [22, 67]       # SA: "Nordost", als 45-Grad-Sektor eingetragen
+tide  = "alle"                 # SA
+boden     = "Sand"
+wellentyp = "Beachbreak"
+niveau    = "Anfängerfreundlich, aber überlaufen (SA)"
+korrekturfaktor = 1.0
+notizen = """
+Die einzige belegte Webcam der Westküste (MEO). Der Right Point nebenan steht als eigener Spot "Arrifana (Right Point)".
+"""
+quellen = [
+  "https://www.surf-forecast.com/breaks/Arrifana",
+  "https://thesurfatlas.com/surfing-portugal/aljezur-surf/",
+]
+webcams = ["https://beachcam.meo.pt/livecams/arrifana/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Arrifana/forecasts/latest"]
+unsicher = """
+Die Gradbereiche für Swell und Wind sind aus den Himmelsrichtungen Nordwest und Nordost abgeleitet.
+"""
+
+
+[spots.arrifana_right]
+name  = "Arrifana (Right Point)"
+lat   = 37.294
+lon   = -8.873
+swell_dir_deg = [197, 342]     # SW bis NW
+wind_dir_deg  = [344, 105]     # N/NE/E, läuft über Nord
+tide  = "niedrig_mittel"       # MS: Low bis Mid
+boden     = "Boulder"
+wellentyp = "Right Point"
+niveau    = "Intermediate bis Advanced"
+groesse_min_m = 1.8            # MS: bricht erst ab etwa 1,8 m
+korrekturfaktor = 1.0
+notizen = """
+Hält bis dreifach überkopf (MS). Felsen im Ride.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/arrifana-right/guide/8617",
+  "https://www.surf-forecast.com/breaks/Arrifana",
+  "https://thesurfatlas.com/surfing-portugal/aljezur-surf/",
+]
+webcams = ["https://beachcam.meo.pt/livecams/arrifana/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Arrifana/forecasts/latest"]
+
+
+[spots.monte_clerigo]
+name  = "Monte Clérigo"
+lat   = 37.345
+lon   = -8.854
+swell_dir_deg = [201, 346]     # SW bis NW
+wind_dir_deg  = [69, 173]      # E/SE
+tide  = "niedrig_mittel"       # Low bis Mid
+boden     = "Sand mit Felsen"
+wellentyp = "Lefts und Rights"
+niveau    = "Anfänger (MS), Intermediate bis Advanced (SA)"
+korrekturfaktor = 1.0
+notizen = """
+Ideal 1,8 bis 2,1 m bei langer Periode, hohl über 2,4 m (SA). Wenig Crowd.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/monte-clerigo/guide/4969",
+  "https://www.surf-forecast.com/breaks/Monte-Clerigo",
+]
+webcams = ["https://beachcam.meo.pt/livecams/monte-clerigo/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Monte-Clerigo/forecasts/latest"]
+unsicher = """
+Niveau: MS "Anfänger", SA "Intermediate bis Advanced".
+"""
+
+
+[spots.castelejo]
+name  = "Castelejo"
+lat   = 37.101
+lon   = -8.945
+swell_dir_deg = [202, 22]      # SW bis N, W und SW am besten (MS), läuft über Nord
+wind_dir_deg  = [22, 112]      # E/NE
+tide  = "mittel_hoch"          # Mid bis High, bei Low dumpy
+boden     = "Sand und Felsen"
+wellentyp = "A-Frame, Left am Südende"
+niveau    = "Alle Level, über Kopfhöhe nur Fortgeschrittene"
+groesse_max_m = 1.8            # SA: ideal 0,9 bis 1,8 m, größer unruhig
+korrekturfaktor = 1.0
+notizen = """
+Ideal 0,9 bis 1,8 m, größer unruhig (SA). Rips, Felsen, lokale Bodyboarder. Zufahrt über Vila do Bispo.
+Die Cordoama-Cam liegt in der Nähe und dient als Anhaltspunkt.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/castelejo/guide/4997",
+  "https://thesurfatlas.com/surfing-portugal/castelejo-beach/",
+  "https://www.surf-forecast.com/breaks/Castelejo",
+]
+webcams = ["https://beachcam.meo.pt/livecams/cordoama/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Castelejo/forecasts/latest"]
+unsicher = """
+Der Windbereich ist aus den Himmelsrichtungen E/NE abgeleitet, die Quelle nennt keine Grad.
+"""
+
+
+[spots.cordoama]
+name  = "Cordoama"
+lat   = 37.105
+lon   = -8.942
+swell_dir_deg = [247, 337]     # W bis NW
+wind_dir_deg  = [67, 157]      # E/SE
+tide  = "mittel_hoch"          # Mid bis High, steigend am besten, bei Low wenig
+boden     = "Sand und Felsen"
+wellentyp = "A-Frames"
+niveau    = "Alle Level"
+korrekturfaktor = 1.0
+notizen = """
+Läuft schon bei kleinem Swell. Rips und Undertow. Parkplatz über dem Peak, Café.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/cordoama/guide/4985",
+  "https://www.surf-forecast.com/breaks/Cordama",
+]
+webcams = ["https://beachcam.meo.pt/livecams/cordoama/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Cordama/forecasts/latest"]
+
+
+[spots.beliche]
+name  = "Beliche"
+lat   = 37.025
+lon   = -8.965
+swell_dir_deg = [155, 284]     # S bis W, ideal großer NW- oder Südswell
+wind_dir_deg  = [337, 67]      # "N bis NE", läuft über Nord
+tide  = "niedrig_mittel"       # Low bis Mid, bei High flach
+boden     = "Sand und Fels bzw. Riff"
+wellentyp = "A-Frame-Wedge, schnell und hohl"
+niveau    = "Intermediate bis Advanced"
+groesse_min_m = 0.9            # läuft ab 0,9 m, optimal ab 1,5 m
+korrekturfaktor = 1.0
+notizen = """
+Optimal ab 1,5 m. Voll, starker Localism. Läuft nur an 5 bis 40 Tagen im Jahr.
+Die Sagres-Cam liegt in der Nähe und dient als Anhaltspunkt.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/beliche/guide/1209",
+  "https://thesurfatlas.com/surfing-portugal/praia-do-beliche/",
+]
+webcams = ["https://beachcam.meo.pt/livecams/sagres/"]
+unsicher = """
+Der Windbereich ist aus "N bis NE" abgeleitet, die Quelle nennt keine Grad.
+"""
+
+
+[spots.tonel]
+name  = "Tonel (Sagres)"
+lat   = 37.005
+lon   = -8.948
+swell_dir_deg = [203, 348]     # SW bis NW, braucht großen NW- oder Südswell
+wind_dir_deg  = [27, 142]      # NE bis SE
+tide  = "alle"                 # beeinflusst aber die Form
+boden     = "Sand und Fels"
+wellentyp = "Beachbreak am Felsstock"
+niveau    = "Anfänger (MS), anspruchsvoll (SA, surf-magazin.de)"
+groesse_min_m = 0.9            # klein unter 0,9 m
+korrekturfaktor = 1.0
+notizen = """
+Schwer und hohl über 1,2 m. Strömung um den Felsstock. Voll.
+Die Sagres-Cam liegt in der Nähe und dient als Anhaltspunkt.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/tonel/guide/4980",
+  "https://thesurfatlas.com/surfing-portugal/sagres-surf/",
+]
+webcams = ["https://beachcam.meo.pt/livecams/sagres/"]
+unsicher = """
+Niveau: MS "Anfänger", SA und surf-magazin.de "anspruchsvoll".
+"""
+
+
+# --- Südküste als Ausweich bei großem Westswell oder starkem Nordwind ---
+
+[spots.mareta]
+name  = "Mareta (Sagres)"
+lat   = 37.00
+lon   = -8.94
+swell_dir_deg = [157, 292]     # SF: Südswell oder sehr großer Westswell, als Bereich Süd bis West eingetragen
+wind_dir_deg  = [292, 337]     # SF: "Nordwest", als 45-Grad-Sektor eingetragen
+tide  = "mittel"
+boden     = "Strand"
+wellentyp = "Durch die Halbinsel vor West und Nordwest geschützt"
+niveau    = "Anfänger, Familien"
+ausweich = true
+korrekturfaktor = 1.0
+notizen = """
+Braucht Südswell oder einen sehr großen Westswell. In 92 % der Zeit zu klein (SF).
+"""
+quellen = ["https://www.surf-forecast.com/breaks/Mareta"]
+webcams = ["https://beachcam.meo.pt/livecams/sagres/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Mareta/forecasts/latest"]
+unsicher = """
+Die Gradbereiche sind aus den Himmelsrichtungen abgeleitet, die Quelle nennt keine Grad.
+"""
+
+
+[spots.zavial]
+name  = "Zavial"
+lat   = 37.046
+lon   = -8.873
+swell_dir_deg = [157, 292]     # S/SW/W
+wind_dir_deg  = [337, 22]      # N
+tide  = "niedrig_mittel"       # Low bis Mid, bei Low und über 0,9 m heavy
+boden     = "Sand und Fels"
+wellentyp = "A-Frame, steile Rechte"
+niveau    = "Intermediate"
+ausweich = true
+korrekturfaktor = 1.0
+notizen = """
+Rips, Close-outs, lokale Bodyboarder. Bei Low und über 0,9 m heavy.
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/zavial/guide/4977",
+  "https://www.surf-forecast.com/breaks/Zavial",
+]
+vergleich = ["https://www.surf-forecast.com/breaks/Zavial/forecasts/latest"]
+
+
+[spots.burgau]
+name  = "Burgau"
+lat   = 37.071
+lon   = -8.776
+swell_dir_deg = [112, 247]     # SE/S/SW, als Bereich eingetragen
+wind_dir_deg  = [292, 22]      # NW/N, von der Landzunge geblockt
+tide  = "mittel"               # Mid, steigend
+boden     = "Sand und Fels"
+wellentyp = "Rechte am Westende"
+niveau    = "Alle Level, eher Anfänger"
+groesse_min_m = 0.6            # SA: Swell über 0,6 m
+ausweich = true
+korrekturfaktor = 1.0
+notizen = """
+Wenig Crowd. NW-Winterswell wickelt um die Landzunge (SA).
+"""
+quellen = [
+  "https://mondo.surf/surf-spot/burgau/guide/4989",
+  "https://thesurfatlas.com/surfing-portugal/burgau-surf/",
+]
+unsicher = """
+Die Gradbereiche für Swell und Wind sind aus den Himmelsrichtungen abgeleitet, die Quelle nennt keine Grad.
+"""
+
+
+[spots.praia_da_luz]
+name  = "Praia da Luz"
+lat   = 37.09
+lon   = -8.73
+swell_dir_deg = [135, 180]     # SF: "SSE", als Sektor eingetragen
+wind_dir_deg  = [315, 360]     # "NNW", als Sektor eingetragen
+tide  = "hoch"
+boden     = "Left-Reef bei Rocha Negra"
+wellentyp = "Left-Reef"
+niveau    = "Intermediate+"
+ausweich = true
+korrekturfaktor = 1.0
+notizen = """
+Starker Localism, unzuverlässig.
+Achtung bei surf-forecast.com: Der Eintrag "Luz-1" ist dieser Spot, "Luz" liegt bei Porto.
+"""
+quellen = ["https://www.surf-forecast.com/breaks/Luz-1"]
+webcams = ["https://beachcam.meo.pt/livecams/praia-da-luz/"]
+vergleich = ["https://www.surf-forecast.com/breaks/Luz-1/forecasts/latest"]
+unsicher = """
+Swell: SF "SSE", SA "W/NW". Für den Score steht der SF-Wert, weil der Strand nach Süden zeigt.
+Die Gradbereiche sind aus den Himmelsrichtungen abgeleitet.
+"""
+
+
+[spots.meia_praia]
+name  = "Lagos, Meia Praia"
+lat   = 37.11
+lon   = -8.66
+swell_dir_deg = [247, 337]     # großer W/NW-Swell mit langer Periode
+wind_dir_deg  = [337, 22]      # "Nord", als 45-Grad-Sektor eingetragen
+tide  = "niedrig"
+boden     = "Sand"
+wellentyp = "Viele Peaks"
+niveau    = "Anfänger"
+ausweich = true
+korrekturfaktor = 1.0
+notizen = """
+Braucht Ostwindswell oder einen sehr großen W/NW-Swell mit langer Periode. In 96 % der Zeit zu klein (SF).
+"""
+quellen = ["https://www.surf-forecast.com/breaks/Meia-Praia"]
+webcams = [
+  "https://beachcam.meo.pt/livecams/meia-praia/",
+  "https://iplivecams.com/live-cams/restaurante-bar-duna-beach-pinhal-da-meia-praia-lagos-portugal/",
+]
+vergleich = ["https://www.surf-forecast.com/breaks/Meia-Praia/forecasts/latest"]
+unsicher = """
+Swell: Der Ost-Swell, den die Quelle auch nennt, lässt sich als einzelner Bereich nicht mit dem W/NW-Swell verbinden und fehlt hier.
+Die Gradbereiche sind aus den Himmelsrichtungen abgeleitet.
+"""

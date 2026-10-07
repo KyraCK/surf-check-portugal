@@ -1,0 +1,94 @@
+# Baut die Seite neu und veröffentlicht sie auf GitHub Pages.
+#
+# Wann das läuft:
+#   * jeden Tag dreimal: kurz nach 6:00, kurz nach 9:00 und kurz nach 18:00 Uhr portugiesischer Zeit
+#     (der Lauf um 9:10 holt den ECMWF-Lauf von 00 UTC, der erst gegen 7:45 UTC fertig ist)
+#   * sofort, wenn du etwas in config/ oder am Code änderst (Push auf "main")
+#   * auf Knopfdruck: Reiter "Actions" > "Seite aktualisieren" > "Run workflow"
+#
+# GitHub rechnet in UTC (Weltzeit). Portugal hat im Sommer UTC+1 und im Winter UTC+0
+# (Umstellung am 25.10.2026). Darum steht jede Uhrzeit zweimal da, und der Schritt
+# "Uhrzeit prüfen" lässt den falschen Lauf ausfallen. Die Minute 10 statt 0 hilft, weil
+# GitHub um die volle Stunde oft verspätet startet. Bis zu 50 Minuten Verspätung sind in Ordnung.
+
+name: Seite aktualisieren
+
+on:
+  schedule:
+    - cron: "10 5 * * *"    # 6:10 Uhr Sommerzeit
+    - cron: "10 6 * * *"    # 6:10 Uhr Winterzeit
+    - cron: "10 17 * * *"   # 18:10 Uhr Sommerzeit
+    - cron: "10 18 * * *"   # 18:10 Uhr Winterzeit
+    - cron: "10 8 * * *"    # 9:10 Uhr Sommerzeit
+    - cron: "10 9 * * *"    # 9:10 Uhr Winterzeit
+  push:
+    branches: [main]
+    paths: ["config/**", "*.py", "vorlage/**", ".github/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Immer nur ein Lauf gleichzeitig, ein laufender wird nicht abgebrochen
+concurrency:
+  group: seite
+  cancel-in-progress: false
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Uhrzeit prüfen
+        id: zeit
+        run: |
+          stunde=$(TZ=Europe/Lisbon date +%H)
+          if [ "${{ github.event_name }}" != "schedule" ] || [ "$stunde" = "06" ] || [ "$stunde" = "09" ] || [ "$stunde" = "18" ]; then
+            echo "los=ja" >> "$GITHUB_OUTPUT"
+          else
+            echo "los=nein" >> "$GITHUB_OUTPUT"
+            echo "Ortszeit in Portugal: $stunde Uhr. Das ist nicht der richtige Lauf (Sommer-/Winterzeit), er wird übersprungen."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.zeit.outputs.los == 'ja'
+
+      - uses: actions/setup-python@v5
+        if: steps.zeit.outputs.los == 'ja'
+        with:
+          python-version: "3.12"
+
+      # Die letzten Rohdaten merken, damit bei einem Ausfall einer Quelle die Seite
+      # "veraltet" anzeigen kann statt leer zu bleiben.
+      - uses: actions/cache@v4
+        if: steps.zeit.outputs.los == 'ja'
+        with:
+          path: data
+          key: rohdaten-${{ github.run_id }}
+          restore-keys: rohdaten-
+
+      - name: Tests (nur bei Änderungen, nicht bei den täglichen Läufen)
+        if: steps.zeit.outputs.los == 'ja' && github.event_name != 'schedule'
+        run: python3 -m unittest discover -s tests
+
+      - name: Daten holen und Seite bauen
+        if: steps.zeit.outputs.los == 'ja'
+        run: python3 aktualisieren.py
+
+      - uses: actions/configure-pages@v5
+        if: steps.zeit.outputs.los == 'ja'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.zeit.outputs.los == 'ja'
+        with:
+          path: docs
+
+      - name: Veröffentlichen
+        id: deploy
+        if: steps.zeit.outputs.los == 'ja'
+        uses: actions/deploy-pages@v4
