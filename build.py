@@ -95,7 +95,7 @@ def segmente(n, senkrecht=False) -> str:
 def skala(pid, n, personen) -> str:
     wert = "–" if n is None else str(n)
     label = "kein Score, Daten fehlen" if n is None else f"Score {n} von 10"
-    return (f'<div class="sc {pid}{" leer" if n is None else ""}">{avatar(pid, personen, 28)}'
+    return (f'<div class="sc {pid}{" leer" if n is None else ""}">{avatar(pid, personen, 44)}'
             f'<div class="bar" role="img" aria-label="{label}">{segmente(n)}</div>'
             f'<b class="n{" leer" if n is None else ""}">{wert}</b></div>')
 
@@ -103,7 +103,7 @@ def skala(pid, n, personen) -> str:
 def mini(pid, n, personen) -> str:
     wert = "–" if n is None else str(n)
     label = "kein Score" if n is None else f"Score {n} von 10"
-    return (f'<div class="mini {pid}">{avatar(pid, personen, 24)}'
+    return (f'<div class="mini {pid}">{avatar(pid, personen, 36)}'
             f'<div class="vbar" role="img" aria-label="{label}">{segmente(n, True)}</div><b>{wert}</b></div>')
 
 
@@ -473,7 +473,7 @@ def sektion_empfehlung(e, v, cfg) -> str:
             gruppen.append((sig, [pid]))
     zeilen = ""
     for _, pids in gruppen:
-        avs = "".join(avatar(p, personen, 34 if len(pids) > 1 else 40) for p in pids)
+        avs = "".join(avatar(p, personen, 44 if len(pids) > 1 else 52) for p in pids)
         zeilen += f'<div class="rec"><div class="avs">{avs}</div><p>{satz_gruppe(pids, empf, cfg, e)}</p></div>'
     return f'<div class="sec-h"><h2>Für euch drei</h2><small>aus den Scores</small></div><div class="card">{zeilen}</div>'
 
@@ -534,9 +534,9 @@ def sektion_legende(cfg) -> str:
     kopfzeile, koerper = "", ""
     for pid, p in personen.items():
         sw = score.schwellen(p, regeln)
-        kopfzeile += (f'<div class="lp">{avatar(pid, personen, 40)}<b>{esc(p.get("kurz", ""))}</b>'
+        kopfzeile += (f'<div class="lp">{avatar(pid, personen, 56)}<b>{esc(p.get("kurz", ""))}</b>'
                       f'<small>surfbar ab {hoehe_text(sw["surfbar"])} m</small></div>')
-        koerper += (f'<div class="rec">{avatar(pid, personen, 40)}<p>{esc(p.get("beschreibung", ""))}'
+        koerper += (f'<div class="rec">{avatar(pid, personen, 52)}<p>{esc(p.get("beschreibung", ""))}'
                     f'<br><small>Bei 10 s Periode und schwachem ablandigem Wind: surfbar (Score {skala_cfg["lohnt_kaum_bis"] + 1}) '
                     f'ab etwa {hoehe_text(sw["surfbar"])} m, gut (Score {skala_cfg["surfbar_bis"] + 1}) ab etwa {hoehe_text(sw["gut"])} m. '
                     f'Die vollen Grundpunkte gibt es ab etwa {hoehe_text(score.optimal_ab(p))} m.</small></p></div>')
