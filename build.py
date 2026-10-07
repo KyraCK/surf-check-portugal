@@ -214,7 +214,8 @@ def sektion_fazit(e, v, cfg) -> str:
     ausweich_hinweis = '<p class="why">Ausweichspot, liegt weiter weg.</p>' if f.get("ausweich") else ""
     wort_tag = "Heute" if e["modus"] == "heute" else aw.WOCHENTAGE_LANG[e["anzeige"].weekday()]
     if f["ja"]:
-        titel = f'Ja, {esc(spot)}<br>{uhr_von_bis(b)} Uhr'
+        # In der großen Überschrift nur der Kurzname ("Cabedelo" statt "Cabedelo (Viana do Castelo)")
+        titel = f'Ja, {esc(spot.split(" (")[0])}<br>{uhr_von_bis(b)} Uhr'
         zeile = ""
     else:
         titel = f'{esc(wort_tag)}<br>nicht'
