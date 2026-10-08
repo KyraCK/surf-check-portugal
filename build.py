@@ -314,15 +314,27 @@ def periode_hinweis(b) -> str:
     return "Periode des größeren Anteils (Swell oder Windsee), sonst Spitzenperiode"
 
 
-def metriken(b, spot, ext, tide_info) -> str:
-    korr = spot["korrekturfaktor"]
+def faktor_text(fi) -> str:
+    """' · Faktor 0,85 (gelernt aus 3 Beobachtungen)' oder nichts, wenn der Faktor kaum von 1 abweicht."""
+    if not fi or abs(fi["gesamt"] - 1) < 0.03:
+        return ""
+    if fi["quelle"] == "eigene Beobachtungen":
+        woher = f" (gelernt aus {fi['n']} Beobachtung{'en' if fi['n'] != 1 else ''})"
+    elif fi["quelle"] == "andere Spots der Basis":
+        woher = " (von den anderen Spots der Basis gelernt)"
+    else:
+        woher = " (von Hand eingestellt)"
+    return f" · Faktor {zahl(fi['gesamt'], 2)}{woher}"
+
+
+def metriken(b, spot, ext, tide_info, fi=None) -> str:
     modell = {n: v["welle"] for n, v in b["je_modell"].items()}
     maxwert = max(2.0, max(modell.values(), default=0) * 1.25)
-    faktor_text = "" if abs(korr - 1) < 1e-9 else f" · Faktor {zahl(korr, 1)}"
+    faktor_text_ = faktor_text(fi)
     gesamt = (f'<small>Die Modelle melden insgesamt {bereich(b["welle_gesamt_m"], 1)} m, '
               f'am Spot kommt davon weniger an (Richtung zur Küste, Windsee).</small>') if b.get("welle_gesamt_m") else ""
     welle = (f'<div class="m">{icon("wave")}<div><b>{bereich(b["welle_m"], 1, "m")}</b>'
-             f'<small>Welle am Spot{faktor_text}</small>{spannbalken(modell, maxwert)}{gesamt}</div></div>')
+             f'<small>Welle am Spot{faktor_text_}</small>{spannbalken(modell, maxwert)}{gesamt}</div></div>')
     periode = (f'<div class="m">{icon("period")}<div><b>{bereich(b["periode_s"], 0, "s")}</b>'
                f'<small>{esc(periode_hinweis(b))}</small></div></div>')
     wk = b["wind_kn"]
@@ -348,7 +360,7 @@ def kurzzeile(b) -> str:
     return f'<div class="kurz">{"".join(teile)}</div>'
 
 
-def fenster_karte(b, personen, spot, ext, tide_info, bester, e) -> str:
+def fenster_karte(b, personen, spot, ext, tide_info, bester, e, fi=None) -> str:
     if b is None:
         return ""
     urteil = b["urteil"] or "–"
@@ -359,7 +371,7 @@ def fenster_karte(b, personen, spot, ext, tide_info, bester, e) -> str:
             f'<summary><div class="win-h"><span class="wl"><span class="t">{uhr_von_bis(b, True)}<small>Uhr</small></span>{beste_marke}</span>'
             f'<span><span class="pill zeit">vorbei</span><span class="pill">{esc(urteil)}</span></span></div>'
             f'{trio(b, personen)}{kurzzeile(b)}<div class="mehr"><span class="zu">weniger</span><span class="auf">Details</span></div></summary>'
-            f'{metriken(b, spot, ext, tide_info)}</details>')
+            f'{metriken(b, spot, ext, tide_info, fi)}</details>')
 
 
 def spot_info(spot) -> str:
@@ -385,6 +397,14 @@ def spot_info(spot) -> str:
             f'<div class="links" style="padding-bottom:12px">{ls}</div></details>')
 
 
+def beobachtungs_link(cfg) -> str:
+    repo = cfg.get("seite", {}).get("github_repo")
+    if not repo:
+        return "in <code>config/beobachtungen.toml</code>"
+    return (f'<a href="https://github.com/{esc(repo)}/edit/main/config/beobachtungen.toml" target="_blank" rel="noopener">'
+            f'Beobachtung eintragen</a>, GitHub-Anmeldung nötig')
+
+
 def sektion_detail(e, v, cfg) -> str:
     personen = cfg["scoring"]["personen"]
     t = v["tag"]
@@ -404,14 +424,15 @@ def sektion_detail(e, v, cfg) -> str:
         spot = cfg["spots"][sid]
         s = t["spots"][sid]
         beste = s["bester"]
-        karten = "".join(fenster_karte(b, personen, spot, bi["ext"], bi["tide"], b is beste, e) for b in s["bloecke"])
+        fi = e["lernen"]["faktoren"][sid]
+        karten = "".join(fenster_karte(b, personen, spot, bi["ext"], bi["tide"], b is beste, e, fi) for b in s["bloecke"])
         if not karten:
             karten = f'<div class="note-card">{icon("info", 20)}<span>Für diesen Spot gibt es keine auswertbaren Zeitfenster (Daten fehlen).</span></div>'
         kal = ""
         if beste and beste["welle_modell_m"]:
-            kal = (f'<div class="note-card kal">{icon("ruler", 20)}<span><b>Kalibrieren:</b> Am Spot erwartet das Modell '
-                   f'{bereich(beste["welle_modell_m"], 1)} m, du siehst Y m? Dann den Faktor für {esc(spot["name"])} in '
-                   f'<code>config/spots.toml</code> anpassen (jetzt {zahl(spot["korrekturfaktor"], 1)}).</span></div>')
+            kal = (f'<div class="note-card kal">{icon("ruler", 20)}<span><b>Stimmt das?</b> Am Spot erwartet das Tool '
+                   f'{bereich(beste["welle_modell_m"], 1)} m. Siehst du etwas anderes, trag es als Beobachtung ein, '
+                   f'das Tool lernt daraus ({beobachtungs_link(cfg)}).</span></div>')
         panels.append(f'<div class="panel" data-panel="{esc(sid)}"{"" if i == 0 else " hidden"}>{karten}{kal}{spot_info(spot)}</div>')
     return f'{kopf}<div class="chips" role="tablist">{chips}</div>{"".join(panels)}'
 
@@ -564,7 +585,9 @@ def sektion_legende(cfg) -> str:
             f'<li>Periode, Richtung des Swells, Wind (ablandig, seitlich, auflandig) und Tide ziehen davon Prozente ab. '
             f'Auflandiger Wind und kurze Perioden kosten am meisten.</li>'
             f'<li>Das wird mit {len(cfg["quellen"]["modelle"])} Wettermodellen einzeln gerechnet ({esc(modelle)}). '
-            f'Der Score ist der Mittelwert. Die Sicherheit sagt, wie einig sich die Modelle waren.</li></ol>'
+            f'Der Score ist der Mittelwert. Die Sicherheit sagt, wie einig sich die Modelle waren.</li>'
+            f'<li>Wer am Spot etwas anderes sieht als das Tool, kann es als Beobachtung eintragen. Das Tool lernt daraus pro Spot, '
+            f'wie viel Welle wirklich ankommt, und rechnet ab dem nächsten Lauf damit.</li></ol>'
             f'<div class="fkr">{farben}</div>'
             f'<p class="src">{icon("info", 13)}<span>Das sind Prognosen aus Wettermodellen, keine Messungen. Quellen und Modellläufe stehen unten unter Datenlage.</span></p>'
             f'</div></details></section>')
@@ -610,6 +633,26 @@ def status_zeile(name, detail, info, zeit_text=None, ok=None) -> str:
     fehler = f' · {esc(info["fehler"])}' if info.get("fehler") and not ok else ""
     return (f'<div class="srow{"" if ok else " warn"}">{icon(sym, 16)}<div>{esc(name)}{zusatz}'
             f'<small>{detail}{fehler}</small></div><time>{esc(zeit)}</time></div>')
+
+
+def lernen_zeile(e, cfg) -> str:
+    """Was hat das Tool aus den Beobachtungen gelernt?"""
+    l = e["lernen"]
+    link = beobachtungs_link(cfg)
+    if not l["anzahl"]:
+        text = f"Noch keine nutzbaren Beobachtungen. Siehst du am Spot etwas anderes als das Tool, trag es ein ({link}). Das Tool lernt daraus, wie viel Welle an jedem Spot wirklich ankommt."
+    else:
+        eigene = [(sid, f) for sid, f in l["faktoren"].items() if f["quelle"] == "eigene Beobachtungen"]
+        liste = ", ".join(f'{esc(cfg["spots"][sid]["name"].split(" (")[0])} {zahl(f["lern"], 2)} ({f["n"]} Beob.)' for sid, f in eigene)
+        text = (f'{l["anzahl"]} Beobachtung{"en" if l["anzahl"] != 1 else ""} genutzt. Gesehene Höhe geteilt durch die Höhe des Tools '
+                f'im Schnitt {zahl(l["median_verhaeltnis"], 2)} (1,00 wäre genau richtig). Gelernte Faktoren: {liste}. '
+                f'Die anderen Spots der Basis übernehmen die Hälfte der Korrektur. Wenige Beobachtungen verschieben den Faktor nur vorsichtig.')
+        if l["pruefung"]:
+            p = l["pruefung"]
+            text += (f' Test ohne Mogeln: Das Tool lag im Schnitt {zahl(p["fehler_vorher_m"], 2)} m daneben ohne Lernen '
+                     f'und {zahl(p["fehler_nachher_m"], 2)} m mit Lernen.')
+        text += f' Weitere Beobachtung: {link}.'
+    return status_zeile("Lernen aus Beobachtungen", text, {"status": "aktuell", "stand": None}, zeit_text="", ok=True)
 
 
 def sektion_datenlage(e, cfg) -> str:
@@ -662,6 +705,7 @@ def sektion_datenlage(e, cfg) -> str:
             if sd:
                 teile.append(f'Viana heute {zahl(float(sd["tMin"]), 0)} bis {zahl(float(sd["tMax"]), 0)} °C, Regenwahrscheinlichkeit {zahl(float(sd["precipitaProb"]), 0)} %')
             zeilen.append(status_zeile("IPMA", " · ".join(teile) + ". Wassertemperatur und Warnungen kommen von dort.", inf))
+    zeilen.append(lernen_zeile(e, cfg))
     # Modell-Uneinigkeit
     v0 = e["ansichten"][e["standard"]]
     f = v0["fazit"]

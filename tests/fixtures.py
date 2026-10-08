@@ -109,3 +109,11 @@ def rohdaten(cfg, jetzt, hoehe=1.5, periode=11.0, wind=5.0, wind_richtung=90.0, 
 def ausfall(roh, schluessel, grund="HTTP 500"):
     """Macht aus einer Quelle einen Ausfall ohne ältere Daten."""
     roh["quellen"][schluessel] = {"status": "fehler", "abgerufen_um": None, "url": None, "daten": None, "fehler": grund}
+
+
+def mit_beobachtungsdaten(roh):
+    """Kopiert die Wellen-Vorhersagen als Daten aus der Vergangenheit für das Lernen (Schlüssel 'beob:...')."""
+    for k in list(roh["quellen"]):
+        if k.startswith("welle:"):
+            roh["quellen"]["beob:" + k[len("welle:"):]] = roh["quellen"][k]
+    return roh

@@ -64,7 +64,7 @@ def _pruefe_sektor(wert, wo: str) -> None:
 
 def pruefe_scoring(s: dict) -> None:
     f = "config/scoring.toml"
-    for abschnitt in ("skala", "allgemein", "swell_richtung", "spot_groesse", "tide", "sicherheit", "zeitfenster", "urteile", "baden", "ausweich", "personen"):
+    for abschnitt in ("skala", "allgemein", "swell_richtung", "spot_groesse", "tide", "sicherheit", "zeitfenster", "urteile", "baden", "ausweich", "lernen", "personen"):
         if abschnitt not in s:
             raise ConfigFehler(f"{f}: Der Abschnitt [{abschnitt}] fehlt.")
     _pruefe_kennlinie(s["allgemein"].get("zu_lange_periode_prozent"), f"{f} [allgemein] zu_lange_periode_prozent", 100)
@@ -89,6 +89,13 @@ def pruefe_scoring(s: dict) -> None:
         raise ConfigFehler(f"{f} [baden]: von_uhr und bis_uhr müssen Uhrzeiten zwischen 0 und 24 sein, von kleiner als bis.")
     if not _zahl(b.get("mindest_prozent")):
         raise ConfigFehler(f"{f} [baden] mindest_prozent: Das muss eine Zahl sein.")
+    le = s["lernen"]
+    for feld in ("vorsicht", "anteil_andere_spots_prozent", "max_alter_tage", "mindest_modellhoehe_m"):
+        if not (_zahl(le.get(feld)) and le[feld] >= 0):
+            raise ConfigFehler(f"{f} [lernen] {feld}: Das fehlt oder ist keine Zahl ab 0.")
+    g = le.get("faktor_grenzen")
+    if not (isinstance(g, list) and len(g) == 2 and all(_zahl(x) for x in g) and 0 < g[0] <= 1 <= g[1]):
+        raise ConfigFehler(f"{f} [lernen] faktor_grenzen: Das muss [kleinster, größter] sein, zum Beispiel [0.4, 1.6].")
     if not (_zahl(s["ausweich"].get("vorsprung_punkte")) and s["ausweich"]["vorsprung_punkte"] >= 0):
         raise ConfigFehler(f"{f} [ausweich] vorsprung_punkte: Das muss eine Zahl ab 0 sein.")
     if not s["personen"]:
@@ -216,6 +223,22 @@ def pruefe_ausfluege(a: dict, basen: list) -> None:
             raise ConfigFehler(f"{wo}: 'hund' muss erlaubt_leine oder unklar sein.")
 
 
+def pruefe_beobachtungen(b: dict, spots: dict) -> None:
+    f = "config/beobachtungen.toml"
+    for x in b.get("beobachtung", []):
+        wo = f"{f} {x.get('datum', '?')} {x.get('spot', '?')}"
+        if not isinstance(x.get("datum"), date):
+            raise ConfigFehler(f"{wo}: 'datum' muss ein Datum wie 2026-10-08 sein (ohne Anführungszeichen).")
+        uhr = x.get("uhr")
+        if not (isinstance(uhr, int) and not isinstance(uhr, bool) and 0 <= uhr <= 23):
+            raise ConfigFehler(f"{wo}: 'uhr' muss eine ganze Stunde von 0 bis 23 sein.")
+        if x.get("spot") not in spots:
+            raise ConfigFehler(f"{wo}: Den Spot {x.get('spot')!r} gibt es nicht in spots.toml.")
+        h = x.get("hoehe_m")
+        if not (_zahl(h) and 0 <= h <= 10):
+            raise ConfigFehler(f"{wo}: 'hoehe_m' muss eine Zahl in Metern sein (Punkt statt Komma, zum Beispiel 0.5).")
+
+
 def lade() -> dict:
     """Liest alle Konfigurationsdateien, prüft sie und gibt sie zusammen zurück."""
     scoring = _lade("scoring.toml")
@@ -228,9 +251,12 @@ def lade() -> dict:
     pruefe_manuell(manuell)
     ausfluege = _lade("ausfluege.toml")
     pruefe_ausfluege(ausfluege, spots["basen"])
+    beobachtungen = _lade("beobachtungen.toml")
+    pruefe_beobachtungen(beobachtungen, spots["spots"])
     return {"scoring": scoring, "spots": spots["spots"], "basen": spots["basen"],
             "quellen": quellen, "manuell": manuell.get("gezeiten", []),
-            "ausfluege": ausfluege["ausfluege"], "ausflug_regeln": ausfluege["regeln"]}
+            "ausfluege": ausfluege["ausfluege"], "ausflug_regeln": ausfluege["regeln"],
+            "beobachtungen": beobachtungen.get("beobachtung", []), "seite": quellen.get("seite", {})}
 
 
 def basis_fuer(basen: list, tag: date) -> dict | None:

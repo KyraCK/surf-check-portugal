@@ -37,3 +37,8 @@ welle       = "meteofrance_wave"
 wetter      = "icon_seamless"
 lauf_welle  = "meteofrance_wave"
 lauf_wetter = "dwd_icon"
+
+[seite]
+# Dein GitHub-Repository (Benutzername/Name). Damit setzt die Seite den Link zum Eintragen von
+# Beobachtungen. Ohne diese Zeile erscheint kein Link.
+github_repo = "KyraCK/surf-check-portugal"

@@ -62,11 +62,12 @@ def hole_wetter_mehrere(punkte, modelle, tage=6):
     return [{"url": url, "daten": d} for d in _als_liste(hole_json(url), len(punkte))]
 
 
-def hole_wellen_mehrere(punkte, modell, tage=6):
+def hole_wellen_mehrere(punkte, modell, tage=6, vergangene_tage=0):
     breite = ",".join(str(p[0]) for p in punkte)
     laenge = ",".join(str(p[1]) for p in punkte)
+    rueck = f"&past_days={vergangene_tage}" if vergangene_tage else ""
     url = (f"{MARINE}/v1/marine?latitude={breite}&longitude={laenge}&hourly={WELLEN_VARIABLEN}"
-           f"&models={modell}&timezone=UTC&forecast_days={tage}")
+           f"&models={modell}&timezone=UTC&forecast_days={tage}{rueck}")
     return [{"url": url, "daten": d} for d in _als_liste(hole_json(url), len(punkte))]
 
 

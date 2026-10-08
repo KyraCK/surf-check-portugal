@@ -38,6 +38,29 @@ Die Modelle messen draußen auf dem Meer. Am Strand sieht die brechende Welle of
 
 auf `0.8` ändern (mit Punkt, nicht Komma). Ein einzelner Blick reicht nicht, nimm lieber zwei oder drei Vergleiche. Die Seite erinnert dich im Abschnitt „Heute im Detail“ daran.
 
+### Dem Tool beibringen, wie die Wellen am Spot wirklich sind (`config/beobachtungen.toml`)
+
+Die Modelle liegen manchmal daneben, besonders bei der Höhe der brechenden Welle am Strand. Deshalb lernt das Tool aus dem, was du siehst. Du trägst nur ein, wie hoch die Welle an einem Spot war (selbst gesehen, von der Webcam oder von Surfline abgelesen), zum Beispiel:
+
+    [[beobachtung]]
+    datum   = 2026-10-08
+    uhr     = 12
+    spot    = "moledo"
+    hoehe_m = 0.5
+    quelle  = "Webcam"
+
+Das Tool holt dazu die Modellwerte dieser Stunde und vergleicht sie mit deiner Zahl. Daraus wird für den Spot ein Faktor, der bei jedem Lauf zum Korrekturfaktor aus `spots.toml` dazukommt. Wichtig dabei:
+
+- Eine einzelne Beobachtung verschiebt wenig, viele verschieben mehr. Der Faktor bleibt zwischen 0,4 und 1,6.
+- Spots ohne eigene Beobachtung bekommen die Hälfte der Korrektur der anderen Spots derselben Basis.
+- Beobachtungen älter als 60 Tage zählen nicht mehr. Ist die Modellhöhe unter 0,15 m, wird nicht verglichen.
+- Bei „flat“ bitte eine kleine Zahl eintragen (0.2), nicht null.
+- Auf der Seite steht unter „Datenlage“, was das Tool gelernt hat und woher. Ab drei Beobachtungen steht dort auch ein Test, ob der Faktor die Abweichung wirklich verkleinert.
+
+Am einfachsten trägst du direkt bei GitHub ein: Der Link unter „Datenlage“ öffnet die Datei, dann auf den Stift klicken, einen Block ergänzen, *Commit changes*. Nach etwa drei Minuten ist es eingerechnet. Am Mac siehst du es sofort mit
+
+    python3 lernen.py
+
 ### Hoch- und Niedrigwasser selbst eintragen (`config/gezeiten_manuell.toml`)
 
 Wenn du die Zeiten aus einer Tabelle kennst, trage sie für den Tag ein. Dann gilt für diesen Tag deine Angabe statt der Modellrechnung, und die Tide wirkt stärker auf den Score:
@@ -83,7 +106,7 @@ Danach läuft alles von selbst. Änderst du etwas in `config/` und lädst es mit
 
 ## 4. Prüfen, ob alles zusammenpasst
 
-    python3 -m unittest discover -s tests     (dauert etwa 40 Sekunden)
+    python3 -m unittest discover -s tests     (dauert etwa eine Minute)
     python3 tools/links_pruefen.py            (prüft alle Links in den Konfigurationsdateien)
     python3 tools/gezeiten_rueckwaertstest.py (prüft die Tide-Korrektur gegen den Pegel)
 

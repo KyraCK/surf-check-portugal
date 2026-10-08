@@ -1,0 +1,48 @@
+# =====================================================================
+#  BEOBACHTUNGEN · Surf-Check Portugal
+# =====================================================================
+#
+#  Hier trägst du ein, was du an einem Spot wirklich gesehen hast, oder
+#  was du bei Surfline, Windguru oder auf einer Webcam abgelesen hast.
+#  Das Tool lernt daraus, wie viel von der Modell-Welle an diesem Spot
+#  tatsächlich ankommt, und rechnet bei jedem Lauf damit.
+#
+#  EINE ZEILE PRO BEOBACHTUNG
+#  --------------------------
+#  [[beobachtung]]
+#  datum   = 2026-10-08     # Tag (ohne Anführungszeichen)
+#  uhr     = 12             # ungefähre Uhrzeit, ganze Stunde, portugiesische Ortszeit
+#  spot    = "moledo"       # Name wie in spots.toml
+#  hoehe_m = 0.5            # Höhe der brechenden Welle in Metern. Bei einer Spanne
+#                           # (zum Beispiel 0,3 bis 0,6) den Mittelwert nehmen (0.45).
+#  quelle  = "gesehen"      # nur zur Erinnerung: gesehen, Webcam, Surfline ...
+#
+#  Wenn der Spot aussieht wie "flat", trage eine kleine Zahl ein (0.2),
+#  nicht null. Je mehr Beobachtungen, desto sicherer lernt das Tool.
+#
+#  WIE ES LERNT (die Zahlen stehen in scoring.toml unter [lernen])
+#  ---------------------------------------------------------------
+#  Für jede Beobachtung holt das Tool die Modellwerte der Stunden um die
+#  Uhrzeit herum und vergleicht sie mit deiner Zahl. Daraus entsteht pro
+#  Spot ein Faktor. Wenige Beobachtungen verschieben ihn nur wenig, viele
+#  mehr. Spots ohne eigene Beobachtung bekommen die Hälfte der Korrektur
+#  der anderen Spots der Basis. Beobachtungen werden nach 60 Tagen
+#  vergessen. Auf der Seite steht unter "Datenlage", was gelernt wurde.
+#
+#  SO TRÄGST DU ETWAS EIN (ohne Programme)
+#  ---------------------------------------
+#  Öffne diese Datei bei GitHub (Link steht auf der Seite unter Datenlage),
+#  klicke auf den Stift, ergänze einen Block, dann "Commit changes".
+#  Nach etwa drei Minuten ist es auf der Seite eingerechnet.
+# =====================================================================
+
+# 7.10.2026 gegen 13 Uhr, Webcam: geschätzt etwa 90 cm, eher etwas weniger.
+[[beobachtung]]
+datum   = 2026-10-07
+uhr     = 13
+spot    = "moledo"
+hoehe_m = 0.85
+quelle  = "Webcam, Schätzung"
+
+# Noch offen: 8.10.2026, Moledo, "ziemlich flat". Dafür fehlt eine gemessene oder
+# abgelesene Zahl. Sobald du eine hast, ergänzt du hier einen Block wie oben.

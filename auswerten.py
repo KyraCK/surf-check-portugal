@@ -18,8 +18,10 @@ from zoneinfo import ZoneInfo
 
 import config
 import gezeiten
+import lernen
 import quellen
 import score
+from wellen import alter_h, hole, kreismittel, lies_wellen, mittel, wirksame_wellen  # noqa: F401
 
 TZ = ZoneInfo("Europe/Lisbon")
 UTC = timezone.utc
@@ -45,20 +47,6 @@ def kompass_lang(grad):
     return None if grad is None else KOMPASS_LANG[int((grad % 360 + 22.5) // 45) % 8]
 
 
-def kreismittel(grade):
-    g = [x for x in grade if x is not None]
-    if not g:
-        return None
-    s = sum(math.sin(math.radians(x)) for x in g)
-    c = sum(math.cos(math.radians(x)) for x in g)
-    return math.degrees(math.atan2(s, c)) % 360
-
-
-def mittel(werte):
-    w = [x for x in werte if x is not None]
-    return mean(w) if w else None
-
-
 def spanne(werte):
     w = [x for x in werte if x is not None]
     return (min(w), max(w)) if w else None
@@ -66,22 +54,6 @@ def spanne(werte):
 
 def lokal(t: datetime) -> datetime:
     return t.astimezone(TZ)
-
-
-def alter_h(iso_text, jetzt):
-    return (jetzt - quellen.zeit(iso_text)).total_seconds() / 3600.0
-
-
-def hole(roh, schluessel, max_alter_h, jetzt):
-    """(daten, info) für eine Quelle. daten ist None, wenn sie fehlt oder zu alt ist."""
-    e = roh.get("quellen", {}).get(schluessel)
-    if not e or e.get("daten") is None or not e.get("abgerufen_um"):
-        return None, {"status": "ausgefallen", "stand": None, "fehler": (e or {}).get("fehler", "nicht abgerufen")}
-    a = alter_h(e["abgerufen_um"], jetzt)
-    if a > max_alter_h:
-        return None, {"status": "ausgefallen", "stand": e["abgerufen_um"], "fehler": f"Daten sind {a:.0f} Stunden alt"}
-    status = "aktuell" if e["status"] == "ok" else "veraltet"
-    return e["daten"], {"status": status, "stand": e["abgerufen_um"], "fehler": e.get("fehler"), "url": e.get("url")}
 
 
 def schlechtester_status(infos):
@@ -163,72 +135,12 @@ def lies_spot(roh, cfg, spot_id, jetzt, max_alter):
         for tag, a, u in zip(tage["time"], auf, unter):
             if a and u:
                 sonne[date.fromisoformat(tag)] = (quellen.zeit(a), quellen.zeit(u))
-    wellen = {}
-    infos["wellen"] = {}
-    for m in modelle:
-        d, info = hole(roh, f"welle:{spot_id}:{m['name']}", max_alter, jetzt)
-        infos["wellen"][m["name"]] = info
-        if d is None:
-            continue
-        info["punkt"] = (d.get("latitude"), d.get("longitude"))
-        zeiten, hoehe = quellen.stundenreihe(d, "wave_height")
-        spitze = quellen.stundenreihe(d, "wave_peak_period")[1]
-        mittlere = quellen.stundenreihe(d, "wave_period")[1]
-        teil = {k: quellen.stundenreihe(d, k)[1] for k in (
-            "swell_wave_height", "swell_wave_period", "swell_wave_direction",
-            "wind_wave_height", "wind_wave_period", "wind_wave_direction")}
-        richtung = quellen.stundenreihe(d, "wave_direction")[1]
-        wellen[m["name"]] = {}
-        for i, t in enumerate(zeiten):
-            spitzen_wert = spitze[i]
-            # Eine Welle von genau 0,0 m mit Periode 0 gibt es nicht: So meldet ein Modell einen Gitterpunkt an Land.
-            if hoehe[i] == 0 and not mittlere[i] and not spitzen_wert:
-                continue
-            wellen[m["name"]][t] = {
-                "hoehe": hoehe[i], "periode": spitzen_wert if spitzen_wert is not None else mittlere[i],
-                "periode_art": "Spitze" if spitzen_wert is not None else "mittlere", "richtung": richtung[i],
-                "swell_h": teil["swell_wave_height"][i], "swell_t": teil["swell_wave_period"][i],
-                "swell_dir": teil["swell_wave_direction"][i], "wind_h": teil["wind_wave_height"][i],
-                "wind_t": teil["wind_wave_period"][i], "wind_dir": teil["wind_wave_direction"][i]}
-        info["periode_art"] = "Spitze" if any(v is not None for v in spitze) else "mittlere"
-        if not wellen[m["name"]]:
-            del wellen[m["name"]]
-            info.update(status="nicht_verfuegbar", fehler="Der Modellpunkt liegt an Land, das Modell liefert hier keine Werte")
+    wellen, infos["wellen"] = lies_wellen(roh, cfg, spot_id, jetzt, max_alter)
     stunden = {}
     for name, reihe in wellen.items():
         for t, w in reihe.items():
             stunden.setdefault(t, {})[name] = {"welle": w, "wetter": wetter.get(name, {}).get(t)}
     return {"stunden": stunden, "wetter": wetter, "sonne": sonne, "infos": infos}
-
-
-def wirksame_wellen(kombis, spot, regeln):
-    """Welche Welle kommt je Modell-Kombination am Spot an?
-
-    Modelle mit Aufteilung in Swell und Windsee (GFS, Météo-France): beide Teile getrennt, jeweils nach
-    der Richtung zur Küste. Modelle ohne Aufteilung (ECMWF bei Open-Meteo): Der Anteil, der bei den
-    anderen Modellen ankommt, wird übernommen. Gibt es gar keine Aufteilung, zählt nur die Richtung.
-    """
-    geteilt = {n: score.teile_welle(e["welle"], spot, regeln) for n, e in kombis.items()}
-    vorhanden = {n: g for n, g in geteilt.items() if g}
-    aus = {}
-    for n, e in kombis.items():
-        w = e["welle"]
-        g = geteilt[n]
-        if g:
-            aus[n] = dict(g, quelle="geteilt")
-        elif vorhanden:
-            anteile = [x["hoehe"] / x["gesamt"] for x in vorhanden.values() if x["gesamt"]]
-            perioden = [x["periode"] for x in vorhanden.values() if x["periode"]]
-            richtungen = [x["richtung"] for x in vorhanden.values() if x["richtung"] is not None]
-            anteil = mean(anteile) if anteile else 1.0
-            aus[n] = {"hoehe": w["hoehe"] * anteil, "gesamt": w["hoehe"], "periode": mean(perioden) if perioden else w["periode"],
-                      "richtung": kreismittel(richtungen) if richtungen else w["richtung"], "art": "übernommen",
-                      "quelle": "übernommen"}
-        else:
-            faktor = score.richtungsfaktor(w["richtung"], spot, regeln)
-            aus[n] = {"hoehe": w["hoehe"] * faktor, "gesamt": w["hoehe"], "periode": w["periode"],
-                      "richtung": w["richtung"], "art": w["periode_art"], "quelle": "ohne Aufteilung"}
-    return aus
 
 
 def bedingung(eintrag, tide, wirk):
@@ -596,6 +508,10 @@ def abstand_zum_sektor_text(grad, sektor):
 # ---- Hauptfunktion -----------------------------------------------------------
 
 def auswerten(cfg, roh, jetzt):
+    # Gelernte Faktoren aus den Beobachtungen: ab hier gilt für jeden Spot manueller x gelernter Faktor
+    lern = lernen.berechne(cfg, roh, jetzt)
+    cfg = dict(cfg, spots={sid: dict(s, korrektur_manuell=s["korrekturfaktor"], korrekturfaktor=lern["faktoren"][sid]["gesamt"])
+                           for sid, s in cfg["spots"].items()})
     regeln, personen = cfg["scoring"], cfg["scoring"]["personen"]
     max_alter = cfg["quellen"]["daten"]["max_alter_stunden"]
     modelle = [m["name"] for m in cfg["quellen"]["modelle"]]
@@ -758,5 +674,5 @@ def auswerten(cfg, roh, jetzt):
         "jetzt": jetzt, "jetzt_lokal": jetzt_l, "daten_stand": roh.get("abgerufen_um"), "modus": modus,
         "anzeige": anzeige, "label": label, "tage": reise, "ansichten": ansichten, "standard": standard["id"],
         "basen": basen, "spots": spots, "alarme": alarme, "laeufe": modelllaeufe(roh, cfg, jetzt, max_alter),
-        "modelle": modelle,
+        "modelle": modelle, "lernen": lern,
     }

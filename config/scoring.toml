@@ -195,6 +195,27 @@ tide          = [[0.4, 40], [0.8, 100]]           # 0 = Niedrigwasser, 1 = Hochw
 vorsprung_punkte = 2
 
 
+# ---------------------------------------------------------------------
+#  11. Lernen aus Beobachtungen (siehe beobachtungen.toml)
+# ---------------------------------------------------------------------
+# Aus jeder Beobachtung ergibt sich ein Verhältnis: gesehene Höhe geteilt durch die Höhe,
+# die das Modell für diese Stunden am Spot erwartet hat. Der Mittelwert (genauer: der Median)
+# dieser Verhältnisse pro Spot wird nicht voll übernommen, sondern vorsichtig:
+#     gelernter Faktor = 1 + (Verhältnis - 1) x n / (n + vorsicht)
+# n ist die Zahl der Beobachtungen. Mit vorsicht = 2 zählt eine einzelne Beobachtung zu einem
+# Drittel, drei zu 60 %, zehn zu 83 %.
+[lernen]
+vorsicht = 2
+# Spots ohne eigene Beobachtung übernehmen so viel Prozent der Korrektur der anderen Spots derselben Basis
+anteil_andere_spots_prozent = 50
+# Kleinster und größter erlaubter Faktor (schützt vor Ausreißern)
+faktor_grenzen = [0.4, 1.6]
+# Beobachtungen, die älter sind, werden nicht mehr benutzt (Wetterlage und Sandbänke ändern sich)
+max_alter_tage = 60
+# Ist das Modell für eine Beobachtung unter dieser Höhe (m), ist das Verhältnis zu ungenau
+mindest_modellhoehe_m = 0.15
+
+
 # =====================================================================
 #  PERSONEN
 # =====================================================================

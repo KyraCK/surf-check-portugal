@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import config
+import lernen
 import quellen
 from netz import AbrufFehler
 
@@ -69,6 +70,25 @@ def alle_aufgaben(cfg: dict, jetzt: datetime):
             gesehen.add("see")
             for tag in range(3):  # IPMA liefert Meer-Vorhersagen nur für 3 Tage, die Datei gilt für alle Küstenpunkte
                 aufgaben.append(([f"ipma_see:{tag}"], lambda t=tag: [quellen.hole_ipma_see(t)]))
+    # Modelldaten aus den vergangenen Tagen für die Beobachtungen (Lernen)
+    tage_noetig = lernen.noetige_tage(cfg, jetzt)
+    if tage_noetig:
+        orte_b = {}
+        for sid in tage_noetig:
+            sp = cfg["spots"][sid]
+            orte_b.setdefault((sp["lat"], sp["lon"]), []).append(sid)
+        liste = list(orte_b)
+        for i in range(0, len(liste), 10):
+            teil = liste[i:i + 10]
+            sids_je_ort = [orte_b[o] for o in teil]
+            rueck = max(tage_noetig[s] for sids in sids_je_ort for s in sids)
+
+            def verteilen_b(ergebnisse, sids_je_ort=sids_je_ort):
+                return [e for e, sids in zip(ergebnisse, sids_je_ort) for _ in sids]
+            for m in modelle:
+                schluessel = [f"beob:{s}:{m['name']}" for sids in sids_je_ort for s in sids]
+                aufgaben.append((schluessel, lambda t=teil, v=verteilen_b, m=m, r=rueck: v(
+                    quellen.hole_wellen_mehrere(t, m["welle"], tage=1, vergangene_tage=r))))
     aufgaben.append((["ipma_warnungen"], lambda: [quellen.hole_ipma_warnungen()]))
     for m in modelle:
         aufgaben.append(([f"lauf:welle:{m['lauf_welle']}"], lambda m=m: [quellen.hole_modelllauf("marine", m["lauf_welle"])]))
