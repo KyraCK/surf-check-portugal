@@ -111,6 +111,39 @@ class Zeitumschaltung(Basis):
         self.assertFalse(bloecke[-1]["vorbei"])
 
 
+class SwellUndWindsee(Basis):
+    """Heute-Fall: Die Modelle melden viel Welle, aber fast alles ist Windsee bei Nordwind."""
+
+    def hoechst(self, e):
+        b = standard(e)["tag"]["spots"]["moledo"]["bester"]
+        return max(v["punkte"] for v in b["personen"].values()), b
+
+    def test_windsee_bei_nordwind_ergibt_keinen_surftag(self):
+        e = self.erg(swell_h=0.4, wind_h=1.5, wind=14.0, wind_richtung=10.0, periode=9.0)
+        punkte, b = self.hoechst(e)
+        self.assertLessEqual(punkte, 3)
+        self.assertGreater(b["welle_gesamt_m"][0], 1.4)           # das Modell meldet viel
+        self.assertLess(b["welle_m"][1], 0.9)                      # am Spot kommt wenig an
+
+    def test_gleiche_gesamthoehe_als_reiner_swell_ist_ein_guter_tag(self):
+        e = self.erg(swell_h=1.55, wind_h=0.0, wind=5.0, wind_richtung=90.0, periode=11.0, swell_dir=270.0)
+        punkte, b = self.hoechst(e)
+        self.assertGreaterEqual(punkte, 7)
+
+    def test_ecmwf_bekommt_den_anteil_der_anderen_modelle(self):
+        e = self.erg(swell_h=0.4, wind_h=1.5, wind=14.0, wind_richtung=10.0)
+        b = standard(e)["tag"]["spots"]["moledo"]["bester"]
+        self.assertEqual(b["periode_art"]["ECMWF"], "übernommen")
+        # ECMWF-Gesamthöhe (1,55 m) wird wie bei den anderen Modellen verkleinert, nicht ungefiltert übernommen
+        self.assertLess(b["je_modell"]["ECMWF"]["welle"], 0.9)
+
+    def test_seite_erklaert_den_unterschied(self):
+        e = self.erg(swell_h=0.4, wind_h=1.5, wind=14.0, wind_richtung=10.0)
+        seite = build.baue_seite(self.cfg, e)
+        self.assertIn("Die Modelle melden insgesamt", seite)
+        self.assertIn("Windsee", seite)
+
+
 class AusweichSpots(Basis):
     def test_gleich_gut_gewinnt_der_normale_spot(self):
         e = self.erg(hoehe=1.5)

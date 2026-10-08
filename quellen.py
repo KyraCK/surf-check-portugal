@@ -16,7 +16,9 @@ IPMA = "https://api.ipma.pt/open-data"
 
 WETTER_VARIABLEN = ("temperature_2m,precipitation_probability,precipitation,cloud_cover,"
                     "wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code")
-WELLEN_VARIABLEN = "wave_height,wave_period,wave_peak_period,wave_direction"
+WELLEN_VARIABLEN = ("wave_height,wave_period,wave_peak_period,wave_direction,"
+                    "swell_wave_height,swell_wave_period,swell_wave_direction,"
+                    "wind_wave_height,wind_wave_period,wind_wave_direction")
 
 
 def iso(dt: datetime) -> str:

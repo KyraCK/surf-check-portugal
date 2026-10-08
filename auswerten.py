@@ -174,6 +174,9 @@ def lies_spot(roh, cfg, spot_id, jetzt, max_alter):
         zeiten, hoehe = quellen.stundenreihe(d, "wave_height")
         spitze = quellen.stundenreihe(d, "wave_peak_period")[1]
         mittlere = quellen.stundenreihe(d, "wave_period")[1]
+        teil = {k: quellen.stundenreihe(d, k)[1] for k in (
+            "swell_wave_height", "swell_wave_period", "swell_wave_direction",
+            "wind_wave_height", "wind_wave_period", "wind_wave_direction")}
         richtung = quellen.stundenreihe(d, "wave_direction")[1]
         wellen[m["name"]] = {}
         for i, t in enumerate(zeiten):
@@ -183,7 +186,10 @@ def lies_spot(roh, cfg, spot_id, jetzt, max_alter):
                 continue
             wellen[m["name"]][t] = {
                 "hoehe": hoehe[i], "periode": spitzen_wert if spitzen_wert is not None else mittlere[i],
-                "periode_art": "Spitze" if spitzen_wert is not None else "mittlere", "richtung": richtung[i]}
+                "periode_art": "Spitze" if spitzen_wert is not None else "mittlere", "richtung": richtung[i],
+                "swell_h": teil["swell_wave_height"][i], "swell_t": teil["swell_wave_period"][i],
+                "swell_dir": teil["swell_wave_direction"][i], "wind_h": teil["wind_wave_height"][i],
+                "wind_t": teil["wind_wave_period"][i], "wind_dir": teil["wind_wave_direction"][i]}
         info["periode_art"] = "Spitze" if any(v is not None for v in spitze) else "mittlere"
         if not wellen[m["name"]]:
             del wellen[m["name"]]
@@ -195,14 +201,44 @@ def lies_spot(roh, cfg, spot_id, jetzt, max_alter):
     return {"stunden": stunden, "wetter": wetter, "sonne": sonne, "infos": infos}
 
 
-def bedingung(eintrag, tide):
-    """Eingabe für score.bewerte aus einem Stundeneintrag und dem Tide-Stand."""
-    w, we = eintrag["welle"], eintrag["wetter"] or {}
+def wirksame_wellen(kombis, spot, regeln):
+    """Welche Welle kommt je Modell-Kombination am Spot an?
+
+    Modelle mit Aufteilung in Swell und Windsee (GFS, Météo-France): beide Teile getrennt, jeweils nach
+    der Richtung zur Küste. Modelle ohne Aufteilung (ECMWF bei Open-Meteo): Der Anteil, der bei den
+    anderen Modellen ankommt, wird übernommen. Gibt es gar keine Aufteilung, zählt nur die Richtung.
+    """
+    geteilt = {n: score.teile_welle(e["welle"], spot, regeln) for n, e in kombis.items()}
+    vorhanden = {n: g for n, g in geteilt.items() if g}
+    aus = {}
+    for n, e in kombis.items():
+        w = e["welle"]
+        g = geteilt[n]
+        if g:
+            aus[n] = dict(g, quelle="geteilt")
+        elif vorhanden:
+            anteile = [x["hoehe"] / x["gesamt"] for x in vorhanden.values() if x["gesamt"]]
+            perioden = [x["periode"] for x in vorhanden.values() if x["periode"]]
+            richtungen = [x["richtung"] for x in vorhanden.values() if x["richtung"] is not None]
+            anteil = mean(anteile) if anteile else 1.0
+            aus[n] = {"hoehe": w["hoehe"] * anteil, "gesamt": w["hoehe"], "periode": mean(perioden) if perioden else w["periode"],
+                      "richtung": kreismittel(richtungen) if richtungen else w["richtung"], "art": "übernommen",
+                      "quelle": "übernommen"}
+        else:
+            faktor = score.richtungsfaktor(w["richtung"], spot, regeln)
+            aus[n] = {"hoehe": w["hoehe"] * faktor, "gesamt": w["hoehe"], "periode": w["periode"],
+                      "richtung": w["richtung"], "art": w["periode_art"], "quelle": "ohne Aufteilung"}
+    return aus
+
+
+def bedingung(eintrag, tide, wirk):
+    """Eingabe für score.bewerte aus einem Stundeneintrag, der wirksamen Welle und dem Tide-Stand."""
+    we = eintrag["wetter"] or {}
     return {
-        "hoehe_m": w["hoehe"], "periode_s": w["periode"], "periode_art": w["periode_art"],
-        "swell_richtung": w["richtung"], "wind_kn": we.get("wind"), "boeen_kn": we.get("boeen"),
-        "wind_richtung": we.get("richtung"), "tide_rel": tide[0] if tide else None,
-        "tide_quelle": tide[2] if tide else None,
+        "hoehe_m": wirk["hoehe"], "hoehe_gesamt_m": wirk["gesamt"], "periode_s": wirk["periode"],
+        "periode_art": wirk["art"], "swell_richtung": wirk["richtung"], "wind_kn": we.get("wind"),
+        "boeen_kn": we.get("boeen"), "wind_richtung": we.get("richtung"),
+        "tide_rel": tide[0] if tide else None, "tide_quelle": tide[2] if tide else None,
     }
 
 
@@ -212,8 +248,9 @@ def bewerte_stunden(daten, spot, personen, regeln, ext, manuelle_tage):
     for t, kombis in sorted(daten["stunden"].items()):
         tide = tide_zu_zeit(ext, manuelle_tage, t)
         je_kombi = {}
+        wirk = wirksame_wellen(kombis, spot, regeln)
         for name, eintrag in kombis.items():
-            bed = bedingung(eintrag, tide)
+            bed = bedingung(eintrag, tide, wirk[name])
             je_kombi[name] = {"bed": bed, "personen": {pid: score.bewerte(bed, spot, p, regeln) for pid, p in personen.items()}}
         konsens = {}
         for pid in personen:
@@ -266,6 +303,7 @@ def block_auswerten(start, laenge, st, personen, regeln, spot, modelle_namen, je
     b["modelle"] = [n for n in modelle_namen if n in je_n]
     b["welle_m"] = spanne([mittel([x["hoehe_m"] * korr for x in v]) for v in je_n.values()])
     b["welle_modell_m"] = spanne([mittel([x["hoehe_m"] for x in v]) for v in je_n.values()])
+    b["welle_gesamt_m"] = spanne([mittel([x["hoehe_gesamt_m"] for x in v]) for v in je_n.values()])
     b["periode_s"] = spanne([mittel([x["periode_s"] for x in v]) for v in je_n.values()])
     b["periode_art"] = {n: v[0]["periode_art"] for n, v in je_n.items()}
     b["je_modell"] = {n: {"welle": mittel([x["hoehe_m"] * korr for x in v]), "periode": mittel([x["periode_s"] for x in v]),

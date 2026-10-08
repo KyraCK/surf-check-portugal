@@ -24,10 +24,13 @@ def eintrag(daten, jetzt, status="ok"):
 
 
 def rohdaten(cfg, jetzt, hoehe=1.5, periode=11.0, wind=5.0, wind_richtung=90.0, welle_richtung=290.0,
-             modell_vorlauf_min=30, regen_wk=5, temperatur=20.0, wolken=10, hoehe_je_spot=None):
+             modell_vorlauf_min=30, regen_wk=5, temperatur=20.0, wolken=10, hoehe_je_spot=None,
+             swell_h=None, wind_h=None, swell_dir=290.0, wind_dir=0.0, swell_t=11.0, wind_t=5.0):
     """Rohdaten für alle Spots und Basen der Konfiguration. Das Tidenmodell geht `modell_vorlauf_min` zu früh.
 
     hoehe_je_spot: {"matosinhos": 2.0} setzt für einzelne Spots eine eigene Wellenhöhe.
+    swell_h / wind_h: Swell und Windsee getrennt (Höhe in m, Richtung, Periode). GFS und ICON liefern diese
+    Aufteilung, ECMWF nur die Gesamthöhe (wie bei Open-Meteo). Die Gesamthöhe ist dann hypot(swell, wind).
     """
     start = jetzt.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=4)
     zeiten = _stunden(start, 24 * 11)
@@ -64,10 +67,17 @@ def rohdaten(cfg, jetzt, hoehe=1.5, periode=11.0, wind=5.0, wind_richtung=90.0, 
                 h[f"weather_code_{m}"] = [0] * len(zeiten)
             q[f"wetter:{sid}"] = eintrag({"hourly": h, "daily": dict(sonne)}, jetzt)
             for name in [m["name"] for m in cfg["quellen"]["modelle"]]:
-                q[f"welle:{sid}:{name}"] = eintrag({"latitude": 41.75, "longitude": -9.0, "hourly": {
-                    "time": [_iso(t) for t in zeiten], "wave_height": [(hoehe_je_spot or {}).get(sid, hoehe)] * len(zeiten),
-                    "wave_period": [periode - 1] * len(zeiten), "wave_peak_period": [periode] * len(zeiten),
-                    "wave_direction": [welle_richtung] * len(zeiten)}}, jetzt)
+                n = len(zeiten)
+                gesamt = (math.hypot(swell_h, wind_h or 0.0) if swell_h is not None
+                          else (hoehe_je_spot or {}).get(sid, hoehe))
+                stunde = {"time": [_iso(t) for t in zeiten], "wave_height": [gesamt] * n,
+                          "wave_period": [periode - 1] * n, "wave_peak_period": [periode] * n,
+                          "wave_direction": [welle_richtung] * n}
+                if swell_h is not None and name in ("GFS", "ICON"):
+                    stunde.update(swell_wave_height=[swell_h] * n, swell_wave_period=[swell_t] * n,
+                                  swell_wave_direction=[swell_dir] * n, wind_wave_height=[wind_h or 0.0] * n,
+                                  wind_wave_period=[wind_t] * n, wind_wave_direction=[wind_dir] * n)
+                q[f"welle:{sid}:{name}"] = eintrag({"latitude": 41.75, "longitude": -9.0, "hourly": stunde}, jetzt)
         bid = basis["id"]
         q[f"tide_modell:{bid}"] = eintrag({"hourly": {
             "time": [_iso(t) for t in zeiten],

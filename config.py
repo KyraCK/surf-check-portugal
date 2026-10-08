@@ -69,6 +69,7 @@ def pruefe_scoring(s: dict) -> None:
             raise ConfigFehler(f"{f}: Der Abschnitt [{abschnitt}] fehlt.")
     _pruefe_kennlinie(s["allgemein"].get("zu_lange_periode_prozent"), f"{f} [allgemein] zu_lange_periode_prozent", 100)
     _pruefe_kennlinie(s["swell_richtung"].get("abstand_grad_prozent"), f"{f} [swell_richtung] abstand_grad_prozent", 100)
+    _pruefe_kennlinie(s["swell_richtung"].get("hoehe_nach_winkel_prozent"), f"{f} [swell_richtung] hoehe_nach_winkel_prozent", 100)
     _pruefe_kennlinie(s["spot_groesse"].get("ueber_max_m_prozent"), f"{f} [spot_groesse] ueber_max_m_prozent", 100)
     if "bereiche" not in s["tide"]:
         raise ConfigFehler(f"{f}: Der Abschnitt [tide.bereiche] fehlt.")

@@ -299,21 +299,30 @@ def tide_zeile(b, ext, tide_info):
 
 
 def periode_hinweis(b) -> str:
-    arten = set(b["periode_art"].values())
+    """Welche Periode wird gezeigt? Bei Swell und Windsee zählt die des größeren Anteils."""
+    arten = set(b["periode_art"].values()) - {"übernommen"}
+    if arten == {"Swell"}:
+        return "Swell-Periode"
+    if arten == {"Windsee"}:
+        return "Windsee-Periode, also kurz und unruhig"
+    if arten <= {"Swell", "Windsee"} and arten:
+        return "Swell- oder Windsee-Periode, je nachdem was überwiegt"
     if arten == {"Spitze"}:
         return "Spitzenperiode"
     if arten == {"mittlere"}:
         return "mittlere Periode"
-    return "Spitzenperiode, wo das Modell sie liefert, sonst mittlere"
+    return "Periode des größeren Anteils (Swell oder Windsee), sonst Spitzenperiode"
 
 
 def metriken(b, spot, ext, tide_info) -> str:
     korr = spot["korrekturfaktor"]
     modell = {n: v["welle"] for n, v in b["je_modell"].items()}
     maxwert = max(2.0, max(modell.values(), default=0) * 1.25)
-    hoehe_klein = "" if abs(korr - 1) < 1e-9 else f" · Modell {bereich(b['welle_modell_m'], 1)} m"
+    faktor_text = "" if abs(korr - 1) < 1e-9 else f" · Faktor {zahl(korr, 1)}"
+    gesamt = (f'<small>Die Modelle melden insgesamt {bereich(b["welle_gesamt_m"], 1)} m, '
+              f'am Spot kommt davon weniger an (Richtung zur Küste, Windsee).</small>') if b.get("welle_gesamt_m") else ""
     welle = (f'<div class="m">{icon("wave")}<div><b>{bereich(b["welle_m"], 1, "m")}</b>'
-             f'<small>Welle am Spot · Faktor {zahl(korr, 1)}{hoehe_klein}</small>{spannbalken(modell, maxwert)}</div></div>')
+             f'<small>Welle am Spot{faktor_text}</small>{spannbalken(modell, maxwert)}{gesamt}</div></div>')
     periode = (f'<div class="m">{icon("period")}<div><b>{bereich(b["periode_s"], 0, "s")}</b>'
                f'<small>{esc(periode_hinweis(b))}</small></div></div>')
     wk = b["wind_kn"]
@@ -400,7 +409,7 @@ def sektion_detail(e, v, cfg) -> str:
             karten = f'<div class="note-card">{icon("info", 20)}<span>Für diesen Spot gibt es keine auswertbaren Zeitfenster (Daten fehlen).</span></div>'
         kal = ""
         if beste and beste["welle_modell_m"]:
-            kal = (f'<div class="note-card kal">{icon("ruler", 20)}<span><b>Kalibrieren:</b> Modell sagt '
+            kal = (f'<div class="note-card kal">{icon("ruler", 20)}<span><b>Kalibrieren:</b> Am Spot erwartet das Modell '
                    f'{bereich(beste["welle_modell_m"], 1)} m, du siehst Y m? Dann den Faktor für {esc(spot["name"])} in '
                    f'<code>config/spots.toml</code> anpassen (jetzt {zahl(spot["korrekturfaktor"], 1)}).</span></div>')
         panels.append(f'<div class="panel" data-panel="{esc(sid)}"{"" if i == 0 else " hidden"}>{karten}{kal}{spot_info(spot)}</div>')
@@ -549,7 +558,9 @@ def sektion_legende(cfg) -> str:
             f'<div class="leg-body"><p>Jede Skala gehört zu einer Person. Der Score von 1 bis 10 wird für jede einzeln gerechnet, '
             f'weil Brett und passende Wellengröße verschieden sind. Die leeren Segmente haben die Farbe der Person.</p>{koerper}'
             f'<h3>So entsteht der Score</h3><ol>'
-            f'<li>Die Wellenhöhe am Spot gibt die Grundpunkte von 0 bis 10. Das ist die brechende Welle, nicht die Höhe draußen auf dem Meer.</li>'
+            f'<li>Die Wellenhöhe am Spot gibt die Grundpunkte von 0 bis 10. Das ist die brechende Welle, nicht die Höhe draußen auf dem Meer: '
+            f'Swell und Windsee werden getrennt betrachtet, und jede Welle zählt nur so weit, wie sie auf die Küste zuläuft. '
+            f'Windsee, die bei Nordwind entlang der Küste läuft, bricht dort nicht.</li>'
             f'<li>Periode, Richtung des Swells, Wind (ablandig, seitlich, auflandig) und Tide ziehen davon Prozente ab. '
             f'Auflandiger Wind und kurze Perioden kosten am meisten.</li>'
             f'<li>Das wird mit {len(cfg["quellen"]["modelle"])} Wettermodellen einzeln gerechnet ({esc(modelle)}). '
@@ -615,10 +626,9 @@ def sektion_datenlage(e, cfg) -> str:
     inf = aw.schlechtester_status(for_info)
     erster = alle_spots[0][1]["daten"]["infos"]["wellen"] if alle_spots else {}
     punkte = ", ".join(f'{esc(n)} {zahl(i["punkt"][0], 2)}/{zahl(i["punkt"][1], 2)}' for n, i in erster.items() if i.get("punkt"))
-    arten = ", ".join(f'{esc(n)}: {"Spitzenperiode" if i.get("periode_art") == "Spitze" else "mittlere Periode"}'
-                      for n, i in erster.items() if i.get("periode_art"))
     laeufe_w = ", ".join(f'{esc(n)} {lauf_text(l["welle"])}' for n, l in lauf.items())
-    zeilen.append(status_zeile("Open-Meteo Wellen", f"Läufe: {laeufe_w}. Die Modelle messen die Periode unterschiedlich ({arten}). "
+    zeilen.append(status_zeile("Open-Meteo Wellen", f"Läufe: {laeufe_w}. GFS und Météo-France trennen Swell und Windsee, ECMWF liefert nur die Gesamthöhe. "
+                               f"Dort wird der Swell-Anteil der anderen beiden übernommen. "
                                f"Modellpunkte auf dem Meer (Breite/Länge): {punkte}.", inf))
     # Tide
     for bid, b in e["basen"].items():

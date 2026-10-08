@@ -147,6 +147,42 @@ class MitEchterKonfiguration(unittest.TestCase):
         self.assertLess(self.punkte("p2", 1.2, 7, 6, 90), self.punkte("p2", 1.2, 9, 6, 90))
 
 
+class WirksameWelle(unittest.TestCase):
+    """Welche Welle kommt am Spot an? Richtung zur Küste und Aufteilung in Swell und Windsee."""
+
+    @classmethod
+    def setUpClass(cls):
+        cfg = config.lade()
+        cls.regeln = cfg["scoring"]
+        cls.moledo = cfg["spots"]["moledo"]      # Swell-Bereich 207 bis 332 Grad, Mitte West (270)
+
+    def test_richtungsfaktor(self):
+        f = lambda g: score.richtungsfaktor(g, self.moledo, self.regeln)
+        self.assertAlmostEqual(f(270), 1.0, places=2)           # genau von vorn
+        self.assertAlmostEqual(f(320), 0.8, places=1)           # schräg aus Nordwest
+        self.assertLessEqual(f(0), 0.3)                         # aus Nord: läuft an der Küste entlang
+        self.assertEqual(f(None), 1.0)                          # ohne Richtung kein Abzug
+
+    def test_windsee_entlang_der_kueste_zaehlt_kaum(self):
+        w = {"hoehe": 1.5, "swell_h": 0.3, "swell_dir": 280.0, "swell_t": 10.0,
+             "wind_h": 1.47, "wind_dir": 0.0, "wind_t": 5.0, "periode": 9.0}
+        r = score.teile_welle(w, self.moledo, self.regeln)
+        self.assertLess(r["hoehe"], 0.6)                         # nicht 1,5 m
+        self.assertEqual(r["gesamt"], 1.5)
+
+    def test_windsee_von_vorn_zaehlt_voll_und_bestimmt_die_periode(self):
+        w = {"hoehe": 1.5, "swell_h": 0.3, "swell_dir": 270.0, "swell_t": 10.0,
+             "wind_h": 1.47, "wind_dir": 270.0, "wind_t": 5.0, "periode": 9.0}
+        r = score.teile_welle(w, self.moledo, self.regeln)
+        self.assertAlmostEqual(r["hoehe"], 1.5, places=1)
+        self.assertEqual(r["art"], "Windsee")
+        self.assertEqual(r["periode"], 5.0)                      # kurze Periode drückt den Score später
+
+    def test_ohne_aufteilung_gibt_es_kein_ergebnis(self):
+        self.assertIsNone(score.teile_welle({"hoehe": 1.5, "swell_h": None, "wind_h": None,
+                                             "swell_dir": None, "wind_dir": None}, self.moledo, self.regeln))
+
+
 class Sicherheit(unittest.TestCase):
     R = {"sicherheit": {"hoch_bis_spanne": 1, "mittel_bis_spanne": 3}}
 

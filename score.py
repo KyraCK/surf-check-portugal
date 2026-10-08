@@ -183,3 +183,44 @@ def optimal_ab(person: dict):
         if y >= 10:
             return x
     return None
+
+
+# ---- Welche Welle kommt am Spot an? ------------------------------------------
+
+def mitte_des_fensters(von: float, bis: float) -> float:
+    """Mitte eines Richtungsbereichs von..bis (im Uhrzeigersinn, darf über Nord gehen)."""
+    return (von + ((bis - von) % 360) / 2.0) % 360
+
+
+def winkel_abstand(a: float, b: float) -> float:
+    d = abs(a - b) % 360
+    return min(d, 360 - d)
+
+
+def richtungsfaktor(grad, spot: dict, regeln: dict) -> float:
+    """Anteil (0 bis 1) der Wellenhöhe, der bei dieser Richtung am Spot ankommt."""
+    if grad is None:
+        return 1.0
+    mitte = mitte_des_fensters(*spot["swell_dir_deg"])
+    return kennlinie(regeln["swell_richtung"]["hoehe_nach_winkel_prozent"], winkel_abstand(grad, mitte)) / 100.0
+
+
+def teile_welle(w: dict, spot: dict, regeln: dict):
+    """Wirksame Höhe aus Swell und Windsee getrennt, jeweils nach Richtung zur Küste.
+
+    w: Wellen-Eintrag eines Modells (hoehe, swell_h/t/dir, wind_h/t/dir). Gibt None zurück,
+    wenn das Modell keine Aufteilung in Swell und Windsee liefert (zum Beispiel ECMWF bei Open-Meteo).
+    """
+    if any(w.get(k) is None for k in ("swell_h", "wind_h", "swell_dir", "wind_dir")):
+        return None
+    es = w["swell_h"] * richtungsfaktor(w["swell_dir"], spot, regeln)
+    ew = w["wind_h"] * richtungsfaktor(w["wind_dir"], spot, regeln)
+    eff = math.hypot(es, ew)
+    swell_vorn = es >= ew
+    periode = w.get("swell_t") if swell_vorn else w.get("wind_t")
+    return {
+        "hoehe": eff, "gesamt": w["hoehe"], "swell_wirksam": es, "windsee_wirksam": ew,
+        "periode": periode if periode else w.get("periode"),
+        "richtung": w["swell_dir"] if swell_vorn else w["wind_dir"],
+        "art": "Swell" if swell_vorn else "Windsee",
+    }
